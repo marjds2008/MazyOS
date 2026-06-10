@@ -1,6 +1,6 @@
 export type Categoria     = "serra" | "praia" | "cultura" | "fe";
 export type StatusViagem  = "rascunho" | "aberta" | "ultimas_vagas" | "esgotada" | "encerrada";
-export type StatusLead    = "novo" | "contatado" | "negociando" | "fechado" | "perdido";
+export type StatusLead    = "novo" | "contatado" | "negociando" | "reservado" | "pago" | "viajou" | "perdido";
 export type StatusCampanha = "rascunho" | "pronta" | "enviada" | "cancelada";
 export type StatusEnvio   = "pendente" | "enviado" | "erro" | "ignorado_opt_out";
 

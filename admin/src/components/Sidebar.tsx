@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import {
   LayoutDashboard, MapPin, Users, Star, Image, BookOpen, LogOut, Menu, X,
-  UserRound, Megaphone,
+  UserRound, Megaphone, TrendingUp,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -13,6 +13,7 @@ const nav = [
   { href: "/dashboard",   label: "Dashboard",    icon: LayoutDashboard },
   { href: "/viagens",     label: "Viagens",       icon: MapPin },
   { href: "/clientes",    label: "Clientes",      icon: UserRound },
+  { href: "/funil",       label: "Funil",         icon: TrendingUp },
   { href: "/campanhas",   label: "Campanhas",     icon: Megaphone },
   { href: "/leads",       label: "Leads",         icon: Users },
   { href: "/lista-vip",   label: "Lista VIP",     icon: Star },
