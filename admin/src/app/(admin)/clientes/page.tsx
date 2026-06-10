@@ -2,7 +2,9 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Search, MessageSquare, ExternalLink, UserX, UserCheck } from "lucide-react";
+import { Search, MessageSquare, ExternalLink, UserX, UserCheck, Plus, Pencil } from "lucide-react";
+import ClienteForm from "@/components/ClienteForm";
+import ClienteDetalhe from "@/components/ClienteDetalhe";
 import type { Cliente } from "@/types/database";
 
 const ORIGENS: Record<string, string> = {
@@ -13,11 +15,21 @@ const ORIGENS: Record<string, string> = {
   importacao: "Importação",
 };
 
+const CATEGORIAS: Record<string, string> = {
+  serra:       "Serra",
+  praia:       "Praia",
+  cultura:     "Cultura",
+  fe:          "Fé",
+  interior_rj: "Interior RJ",
+};
+
 export default function ClientesPage() {
-  const [clientes, setClientes] = useState<Cliente[]>([]);
-  const [busca, setBusca]       = useState("");
+  const [clientes, setClientes]       = useState<Cliente[]>([]);
+  const [busca, setBusca]             = useState("");
   const [filtroOptOut, setFiltroOptOut] = useState<"todos" | "ativos" | "opt_out">("ativos");
-  const [loading, setLoading]   = useState(true);
+  const [loading, setLoading]         = useState(true);
+  const [modal, setModal]             = useState<"novo" | Cliente | null>(null);
+  const [detalhe, setDetalhe]         = useState<Cliente | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -55,10 +67,10 @@ export default function ClientesPage() {
   }
 
   const stats = {
-    total:      clientes.length,
-    ativos:     clientes.filter(c => !c.opt_out && c.aceitou_receber_mensagens).length,
-    opt_out:    clientes.filter(c => c.opt_out).length,
-    novos30:    clientes.filter(c => new Date(c.criado_em) > new Date(Date.now() - 30 * 86400000)).length,
+    total:   clientes.length,
+    ativos:  clientes.filter(c => !c.opt_out && c.aceitou_receber_mensagens).length,
+    opt_out: clientes.filter(c => c.opt_out).length,
+    novos30: clientes.filter(c => new Date(c.criado_em) > new Date(Date.now() - 30 * 86400000)).length,
   };
 
   return (
@@ -68,15 +80,18 @@ export default function ClientesPage() {
           <h1 className="text-2xl font-bold text-gray-900">Clientes</h1>
           <p className="text-gray-500 text-sm mt-1">CRM de contatos da Amo Viajar</p>
         </div>
+        <button onClick={() => setModal("novo")} className="btn-primary flex items-center gap-2">
+          <Plus className="w-4 h-4" /> Novo cliente
+        </button>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
-          { label: "Total",          value: stats.total,    color: "text-gray-900" },
-          { label: "Podem receber",  value: stats.ativos,   color: "text-green-700" },
-          { label: "Opt-out",        value: stats.opt_out,  color: "text-red-600" },
-          { label: "Últimos 30 dias",value: stats.novos30,  color: "text-brand-primary" },
+          { label: "Total",           value: stats.total,   color: "text-gray-900" },
+          { label: "Podem receber",   value: stats.ativos,  color: "text-green-700" },
+          { label: "Opt-out",         value: stats.opt_out, color: "text-red-600" },
+          { label: "Últimos 30 dias", value: stats.novos30, color: "text-brand-primary" },
         ].map(({ label, value, color }) => (
           <div key={label} className="card p-4 text-center">
             <div className={`text-2xl font-bold ${color}`}>{value}</div>
@@ -121,7 +136,7 @@ export default function ClientesPage() {
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b border-gray-100">
                 <tr>
-                  {["Nome", "WhatsApp", "Cidade", "Origem", "Cadastro", "Status", ""].map(h => (
+                  {["Nome", "WhatsApp", "Cidade", "Categoria", "Origem", "Cadastro", "Status", ""].map(h => (
                     <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
@@ -134,7 +149,14 @@ export default function ClientesPage() {
                         <div className="w-8 h-8 rounded-full bg-brand-primary/10 flex items-center justify-center shrink-0">
                           <span className="text-brand-primary text-xs font-bold">{c.nome.charAt(0)}</span>
                         </div>
-                        <span className="font-medium text-gray-900">{c.nome}</span>
+                        <div>
+                          <button onClick={() => setDetalhe(c)} className="font-medium text-gray-900 hover:text-brand-primary transition-colors text-left">{c.nome}</button>
+                          {c.data_nascimento && (
+                            <div className="text-xs text-gray-400">
+                              {new Date(c.data_nascimento + "T00:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
@@ -146,6 +168,13 @@ export default function ClientesPage() {
                       </a>
                     </td>
                     <td className="px-4 py-3 text-gray-600">{c.cidade || "—"}</td>
+                    <td className="px-4 py-3">
+                      {c.categoria_favorita ? (
+                        <span className="text-xs bg-brand-primary/10 text-brand-primary px-2 py-0.5 rounded-full font-medium">
+                          {CATEGORIAS[c.categoria_favorita] ?? c.categoria_favorita}
+                        </span>
+                      ) : <span className="text-gray-300">—</span>}
+                    </td>
                     <td className="px-4 py-3">
                       <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
                         {ORIGENS[c.origem] ?? c.origem}
@@ -162,13 +191,17 @@ export default function ClientesPage() {
                       )}
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <button
-                        onClick={() => toggleOptOut(c.id, c.opt_out)}
-                        title={c.opt_out ? "Remover opt-out" : "Marcar opt-out"}
-                        className={`p-1.5 rounded hover:bg-gray-100 transition-colors ${c.opt_out ? "text-green-500" : "text-red-400"}`}
-                      >
-                        {c.opt_out ? <UserCheck className="w-4 h-4" /> : <UserX className="w-4 h-4" />}
-                      </button>
+                      <div className="flex items-center justify-end gap-1">
+                        <button onClick={() => setModal(c)} title="Editar"
+                          className="p-1.5 rounded hover:bg-gray-100 transition-colors text-gray-400 hover:text-gray-600">
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        <button onClick={() => toggleOptOut(c.id, c.opt_out)}
+                          title={c.opt_out ? "Remover opt-out" : "Marcar opt-out"}
+                          className={`p-1.5 rounded hover:bg-gray-100 transition-colors ${c.opt_out ? "text-green-500" : "text-red-400"}`}>
+                          {c.opt_out ? <UserCheck className="w-4 h-4" /> : <UserX className="w-4 h-4" />}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -177,6 +210,22 @@ export default function ClientesPage() {
           </div>
         )}
       </div>
+
+      {modal && (
+        <ClienteForm
+          cliente={modal === "novo" ? undefined : modal}
+          onClose={() => setModal(null)}
+          onSaved={() => { setModal(null); load(); }}
+        />
+      )}
+
+      {detalhe && (
+        <ClienteDetalhe
+          cliente={detalhe}
+          onClose={() => setDetalhe(null)}
+          onEditar={() => { setModal(detalhe); setDetalhe(null); }}
+        />
+      )}
     </div>
   );
 }

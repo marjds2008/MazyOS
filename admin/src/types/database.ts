@@ -80,11 +80,16 @@ export interface GaleriaItem {
 
 // ── CRM ────────────────────────────────────────────────────
 
+export type CategoriaFavorita = "serra" | "praia" | "cultura" | "fe" | "interior_rj";
+
 export interface Cliente {
   id: string;
   nome: string;
   whatsapp: string;
   cidade?: string;
+  data_nascimento?: string;
+  categoria_favorita?: CategoriaFavorita;
+  observacoes?: string;
   origem: string;
   aceitou_receber_mensagens: boolean;
   opt_out: boolean;
@@ -104,6 +109,17 @@ export interface Interesse {
   criado_em: string;
   clientes?: Pick<Cliente, "id" | "nome" | "whatsapp" | "cidade">;
   viagens?: Pick<Viagem, "id" | "titulo" | "destino">;
+}
+
+export interface Participacao {
+  id: string;
+  cliente_id: string;
+  viagem_id?: string;
+  destino?: string;
+  data_viagem?: string;
+  observacoes?: string;
+  criado_em: string;
+  viagens?: Pick<Viagem, "id" | "titulo" | "destino" | "categoria">;
 }
 
 // ── Campanhas WhatsApp ──────────────────────────────────────
