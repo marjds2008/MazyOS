@@ -1,0 +1,214 @@
+{
+  "name": "Amo Viajar — Campanha WhatsApp",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "amo-viajar/campanha-whatsapp",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "aa111111-0000-0000-0000-000000000001",
+      "name": "Receber Campanha",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "amo-viajar-campanha-webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Normaliza payload independentemente de onde o body veio\nconst b = $input.item.json.body ?? $input.item.json;\nreturn [{ json: {\n  campanha_id:         b.campanha_id,\n  viagem_id:           b.viagem_id ?? null,\n  segmento:            b.segmento,\n  mensagem:            b.mensagem,\n  delay_segundos:      Number(b.delay_segundos ?? 3),\n  limite:              Number(b.limite_por_execucao ?? 50),\n} }];"
+      },
+      "id": "aa111111-0000-0000-0000-000000000002",
+      "name": "Parsear Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ─────────────────────────────────────────────────────────\n// Busca contatos elegíveis no Supabase conforme o segmento\n// Variáveis de ambiente necessárias no n8n:\n//   SUPABASE_URL           — Project URL\n//   SUPABASE_SERVICE_ROLE  — Service Role Key (acesso admin)\n// ─────────────────────────────────────────────────────────\n\nconst { campanha_id, viagem_id, segmento, mensagem, delay_segundos, limite } = $input.item.json;\n\nconst BASE      = $env.SUPABASE_URL + '/rest/v1';\nconst KEY       = $env.SUPABASE_SERVICE_ROLE;\nconst HEADERS   = { 'apikey': KEY, 'Authorization': `Bearer ${KEY}` };\n\nasync function get(url) {\n  const r = await fetch(url, { headers: HEADERS });\n  if (!r.ok) throw new Error(`Supabase error ${r.status}: ${await r.text()}`);\n  return r.json();\n}\n\n// ── Buscar viagem ──────────────────────────────────────────\nlet viagem = { titulo: '', destino: '', data_saida: '', valor: '', link_publico: '' };\nif (viagem_id) {\n  const rows = await get(`${BASE}/viagens?id=eq.${viagem_id}&select=titulo,destino,data_saida,valor,link_publico&limit=1`);\n  if (rows[0]) viagem = rows[0];\n}\n\n// ── Query por segmento ─────────────────────────────────────\nconst OPT_FILTER = 'opt_out=eq.false&aceitou_receber_mensagens=eq.true';\nconst LIMIT_QS   = `limit=${limite}`;\nlet rawRows = [];\n\nswitch (segmento) {\n  case 'lista_vip':\n    rawRows = await get(`${BASE}/clientes?${OPT_FILTER}&origem=eq.lista_vip&select=id,nome,whatsapp,cidade&${LIMIT_QS}`);\n    break;\n  case 'todos_clientes':\n    rawRows = await get(`${BASE}/clientes?${OPT_FILTER}&select=id,nome,whatsapp,cidade&${LIMIT_QS}`);\n    break;\n  case 'leads_novos':\n    rawRows = await get(`${BASE}/interesses?status=eq.novo&select=clientes!inner(id,nome,whatsapp,cidade)&clientes.opt_out=eq.false&${LIMIT_QS}`);\n    rawRows = rawRows.map(r => r.clientes).filter(Boolean);\n    break;\n  case 'leads_nao_convertidos':\n    rawRows = await get(`${BASE}/interesses?status=in.(novo,contatado,negociando)&select=clientes!inner(id,nome,whatsapp,cidade)&clientes.opt_out=eq.false&${LIMIT_QS}`);\n    rawRows = rawRows.map(r => r.clientes).filter(Boolean);\n    break;\n  case 'viagem_especifica':\n    if (!viagem_id) { rawRows = []; break; }\n    rawRows = await get(`${BASE}/interesses?viagem_id=eq.${viagem_id}&select=clientes!inner(id,nome,whatsapp,cidade)&clientes.opt_out=eq.false&${LIMIT_QS}`);\n    rawRows = rawRows.map(r => r.clientes).filter(Boolean);\n    break;\n  default:\n    if (segmento.startsWith('categoria_')) {\n      const cat = segmento.replace('categoria_', '');\n      rawRows = await get(`${BASE}/interesses?categoria=eq.${cat}&select=clientes!inner(id,nome,whatsapp,cidade)&clientes.opt_out=eq.false&${LIMIT_QS}`);\n      rawRows = rawRows.map(r => r.clientes).filter(Boolean);\n    }\n}\n\n// ── Formatar data de saída ─────────────────────────────────\nconst fmtData = (d) => {\n  if (!d) return '';\n  const [year, month, day] = d.split('-');\n  const meses = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];\n  return `${parseInt(day)} de ${meses[parseInt(month)-1]} de ${year}`;\n};\n\n// ── Normalizar e deduplicar ────────────────────────────────\nconst seen = new Set();\nconst contatos = rawRows\n  .map(c => ({\n    cliente_id:         c.id,\n    nome:               c.nome,\n    whatsapp:           (c.whatsapp || '').replace(/\\D/g, ''),\n    cidade:             c.cidade ?? '',\n    campanha_id,\n    mensagem_template:  mensagem,\n    delay_segundos,\n    viagem_titulo:      viagem.titulo,\n    viagem_destino:     viagem.destino,\n    viagem_data_fmt:    fmtData(viagem.data_saida),\n    viagem_valor:       viagem.valor ? `R$ ${Number(viagem.valor).toLocaleString('pt-BR', {minimumFractionDigits:2})}` : '',\n    viagem_link:        viagem.link_publico ?? '',\n  }))\n  .filter(c => c.whatsapp.length >= 10)\n  .filter(c => { if (seen.has(c.whatsapp)) return false; seen.add(c.whatsapp); return true; });\n\nif (contatos.length === 0) {\n  return [{ json: { _sem_contatos: true, campanha_id } }];\n}\n\nreturn contatos.map(c => ({ json: c }));"
+      },
+      "id": "aa111111-0000-0000-0000-000000000003",
+      "name": "Buscar Contatos",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "sem-contatos-check",
+              "leftValue": "={{ $json._sem_contatos }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "true" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "aa111111-0000-0000-0000-000000000004",
+      "name": "Tem Contatos?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\"ok\": false, \"mensagem\": \"Nenhum contato elegível para este segmento.\", \"campanha_id\": \"{{ $json.campanha_id }}\"}",
+        "options": { "responseCode": 200 }
+      },
+      "id": "aa111111-0000-0000-0000-000000000005",
+      "name": "Responder Sem Contatos",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1120, 160]
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "aa111111-0000-0000-0000-000000000006",
+      "name": "Loop por Contato",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [1120, 440]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Personaliza a mensagem substituindo variáveis {{...}}\nconst j = $input.item.json;\nconst msg = j.mensagem_template\n  .replace(/\\{\\{nome\\}\\}/g,       j.nome        || 'amigo(a)')\n  .replace(/\\{\\{destino\\}\\}/g,    j.viagem_destino  || '')\n  .replace(/\\{\\{data_saida\\}\\}/g, j.viagem_data_fmt  || '')\n  .replace(/\\{\\{valor\\}\\}/g,      j.viagem_valor     || '')\n  .replace(/\\{\\{link_viagem\\}\\}/g, j.viagem_link     || '');\nreturn [{ json: { ...j, mensagem_final: msg } }];"
+      },
+      "id": "aa111111-0000-0000-0000-000000000007",
+      "name": "Montar Mensagem",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1340, 440]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.EVOLUTION_API_URL }}/message/sendText/{{ $env.EVOLUTION_INSTANCE }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey",       "value": "={{ $env.EVOLUTION_API_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={ \"number\": \"{{ $json.whatsapp }}\", \"text\": \"{{ $json.mensagem_final.replace(/\"/g, '\\\\\"').replace(/\\n/g, '\\\\n') }}\" }",
+        "options": {
+          "response": { "response": { "fullResponse": false } },
+          "redirect": { "redirect": { "followRedirects": true } }
+        }
+      },
+      "id": "aa111111-0000-0000-0000-000000000008",
+      "name": "Enviar via Evolution",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1560, 440],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Salva o resultado do envio no Supabase\nconst j     = $input.item.json;\nconst BASE  = $env.SUPABASE_URL + '/rest/v1';\nconst KEY   = $env.SUPABASE_SERVICE_ROLE;\n\nconst ok     = !j.error && j.key !== undefined;\nconst status = ok ? 'enviado' : 'erro';\n\nawait fetch(`${BASE}/mensagens_whatsapp`, {\n  method: 'POST',\n  headers: {\n    'apikey': KEY,\n    'Authorization': `Bearer ${KEY}`,\n    'Content-Type': 'application/json',\n    'Prefer': 'return=minimal',\n  },\n  body: JSON.stringify({\n    campanha_id:  j.campanha_id,\n    cliente_id:   j.cliente_id ?? null,\n    whatsapp:     j.whatsapp,\n    mensagem:     j.mensagem_final,\n    status_envio: status,\n    resposta_api: ok ? j : null,\n    enviado_em:   ok ? new Date().toISOString() : null,\n    erro:         ok ? null : (j.message || JSON.stringify(j)),\n  }),\n});\n\nreturn [{ json: { ...j, _status_envio: status } }];"
+      },
+      "id": "aa111111-0000-0000-0000-000000000009",
+      "name": "Registrar Envio",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1780, 440]
+    },
+    {
+      "parameters": {
+        "amount": "={{ $json.delay_segundos ?? 3 }}",
+        "unit": "seconds"
+      },
+      "id": "aa111111-0000-0000-0000-000000000010",
+      "name": "Aguardar Delay",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [2000, 440],
+      "webhookId": "wait-delay-amo-viajar"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Atualiza o total_enviados na campanha\nconst campanha_id = $input.item.json.campanha_id;\nconst BASE = $env.SUPABASE_URL + '/rest/v1';\nconst KEY  = $env.SUPABASE_SERVICE_ROLE;\n\n// Contar enviados\nconst r = await fetch(\n  `${BASE}/mensagens_whatsapp?campanha_id=eq.${campanha_id}&status_envio=eq.enviado&select=id`,\n  { headers: { 'apikey': KEY, 'Authorization': `Bearer ${KEY}`, 'Prefer': 'count=exact' } }\n);\nconst total = parseInt(r.headers.get('Content-Range')?.split('/')[1] ?? '0');\n\n// Atualizar campanha\nawait fetch(\n  `${BASE}/campanhas_whatsapp?id=eq.${campanha_id}`,\n  {\n    method: 'PATCH',\n    headers: {\n      'apikey': KEY,\n      'Authorization': `Bearer ${KEY}`,\n      'Content-Type': 'application/json',\n      'Prefer': 'return=minimal',\n    },\n    body: JSON.stringify({ total_enviados: total }),\n  }\n);\n\nreturn [{ json: { campanha_id, total_enviados: total } }];"
+      },
+      "id": "aa111111-0000-0000-0000-000000000011",
+      "name": "Atualizar Campanha",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2220, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"ok\": true, \"campanha_id\": \"{{ $json.campanha_id }}\", \"total_enviados\": {{ $json.total_enviados }} }",
+        "options": { "responseCode": 200 }
+      },
+      "id": "aa111111-0000-0000-0000-000000000012",
+      "name": "Responder OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [2440, 300]
+    }
+  ],
+  "connections": {
+    "Receber Campanha": {
+      "main": [[{ "node": "Parsear Payload", "type": "main", "index": 0 }]]
+    },
+    "Parsear Payload": {
+      "main": [[{ "node": "Buscar Contatos", "type": "main", "index": 0 }]]
+    },
+    "Buscar Contatos": {
+      "main": [[{ "node": "Tem Contatos?", "type": "main", "index": 0 }]]
+    },
+    "Tem Contatos?": {
+      "main": [
+        [{ "node": "Responder Sem Contatos", "type": "main", "index": 0 }],
+        [{ "node": "Loop por Contato",       "type": "main", "index": 0 }]
+      ]
+    },
+    "Loop por Contato": {
+      "main": [
+        [{ "node": "Montar Mensagem",  "type": "main", "index": 0 }],
+        [{ "node": "Atualizar Campanha","type": "main", "index": 0 }]
+      ]
+    },
+    "Montar Mensagem": {
+      "main": [[{ "node": "Enviar via Evolution", "type": "main", "index": 0 }]]
+    },
+    "Enviar via Evolution": {
+      "main": [[{ "node": "Registrar Envio", "type": "main", "index": 0 }]]
+    },
+    "Registrar Envio": {
+      "main": [[{ "node": "Aguardar Delay", "type": "main", "index": 0 }]]
+    },
+    "Aguardar Delay": {
+      "main": [[{ "node": "Loop por Contato", "type": "main", "index": 0 }]]
+    },
+    "Atualizar Campanha": {
+      "main": [[{ "node": "Responder OK", "type": "main", "index": 0 }]]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  },
+  "staticData": null,
+  "tags": [{ "name": "amo-viajar" }, { "name": "whatsapp" }],
+  "triggerCount": 1,
+  "updatedAt": "2025-01-01T00:00:00.000Z",
+  "versionId": "1"
+}

@@ -113,3 +113,27 @@ Quando o usuário pedir skill nova:
 4. Se a skill precisar de arquivos de apoio (templates, exemplos),
    criar dentro da pasta da skill
 5. Seguir o fluxo da skill-creator nativa do Claude Code
+
+---
+
+## Perfil do negócio — MJS Software (instalado em junho/2026)
+
+**Quem:** Marcio, freelancer de desenvolvimento. Opera solo com apoio de 5 IAs.
+
+**O que faz:** Cria sites e SaaS para pequenos e médios empresários.
+
+**Projeto atual:** Amo Viajar — SaaS para empresas de viagem (gestão de clientes, passagens, financeiro).
+
+**Como trabalha:** Sem equipe humana. Define, desenvolve e entrega sozinho.
+
+**Regras específicas desse perfil:**
+- Priorizar finalização sobre perfeição — o gargalo é perfeccionismo, não falta de ideia
+- Antes de qualquer implementação nova, ajudar a definir o escopo claro do que será feito
+- Linguagem simples — nunca assumir que Marcio quer resposta técnica; explicar termos se usar
+- Se surgir demanda de novo cliente, criar pasta `clientes/<Nome>/` com `briefing.md`
+
+**Estrutura de pastas:**
+- `_memoria/` — contexto do negócio, tom de voz, foco atual
+- `identidade/` — logo e design guide do Amo Viajar
+- `src/` — código-fonte do site/SaaS
+- `public/` — assets públicos
