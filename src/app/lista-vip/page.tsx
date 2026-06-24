@@ -64,26 +64,31 @@ export default function ListaVipPage() {
               Receba em primeira mão novas excursões, promoções e oportunidades
               especiais antes da divulgação geral.
             </p>
-            {/* Ajuste 2 — CTA mais tangível */}
             <a
               href="#formulario"
               className="btn-primary inline-flex text-base"
             >
               Quero receber as viagens primeiro →
             </a>
+            {/* Ajuste 1 — micro prova social no hero */}
             <p className="mt-4 text-sm text-brand-muted">
               Gratuito · Sem compromisso · Só vantagens
+            </p>
+            <p className="mt-3 text-sm text-brand-accent font-medium">
+              ✓ Mais de 1.200 passageiros já viajaram com a Amo Viajar
             </p>
           </div>
 
           {/* Lisa */}
           <div className="order-1 md:order-2 flex justify-center">
             <div className="relative">
+              {/* Ajuste 5 — sizes para performance mobile */}
               <div className="w-72 h-80 md:w-80 md:h-[420px] relative rounded-3xl overflow-hidden shadow-2xl">
                 <Image
                   src="/lisa.png"
                   alt="Lisa — fundadora da Amo Viajar"
                   fill
+                  sizes="(max-width: 768px) 288px, 320px"
                   className="object-cover object-top"
                   priority
                 />
@@ -213,6 +218,10 @@ export default function ListaVipPage() {
             className="object-cover"
           />
         </div>
+        {/* Ajuste 3 — credencial institucional */}
+        <p className="text-xs text-brand-muted mb-1">
+          Agência cadastrada no Ministério do Turismo
+        </p>
         <p className="text-sm text-brand-muted">
           © {new Date().getFullYear()} Amo Viajar · Todos os direitos reservados
         </p>

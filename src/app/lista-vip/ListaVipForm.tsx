@@ -104,7 +104,7 @@ export default function ListaVipForm() {
           name="cidade"
           type="text"
           autoComplete="address-level2"
-          placeholder="Ex: São Paulo, SP"
+          placeholder="Ex: Rio de Janeiro, RJ"
           value={form.cidade}
           onChange={handleChange}
           className={inputClass}
