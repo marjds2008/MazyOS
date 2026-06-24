@@ -22,14 +22,15 @@ export default function ListaVipPage() {
       {/* Header */}
       <header className="bg-white border-b border-gray-100 py-4 px-6">
         <div className="max-w-5xl mx-auto">
-          <Image
-            src="/fotos/logo/logo-amo-viajar.png"
-            alt="Amo Viajar"
-            width={160}
-            height={48}
-            className="h-10 w-auto"
-            priority
-          />
+          <div className="h-12 w-12 rounded-full overflow-hidden relative border border-gray-100 shadow-sm">
+            <Image
+              src="/fotos/logo/logo-amo-viajar.png"
+              alt="Amo Viajar"
+              fill
+              className="object-cover"
+              priority
+            />
+          </div>
         </div>
       </header>
 
@@ -136,13 +137,14 @@ export default function ListaVipPage() {
 
       {/* Footer */}
       <footer className="border-t border-gray-100 bg-brand-warm py-10 px-6 text-center">
-        <Image
-          src="/fotos/logo/logo-amo-viajar.png"
-          alt="Amo Viajar"
-          width={120}
-          height={36}
-          className="h-8 w-auto mx-auto mb-4"
-        />
+        <div className="h-14 w-14 rounded-full overflow-hidden relative mx-auto mb-4 border border-gray-100 shadow-sm">
+          <Image
+            src="/fotos/logo/logo-amo-viajar.png"
+            alt="Amo Viajar"
+            fill
+            className="object-cover"
+          />
+        </div>
         <p className="text-sm text-brand-muted">
           © {new Date().getFullYear()} Amo Viajar · Todos os direitos reservados
         </p>
