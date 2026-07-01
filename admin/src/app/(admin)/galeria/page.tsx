@@ -15,7 +15,7 @@ export default function GaleriaPage() {
   async function load() {
     setLoading(true);
     const supabase = createClient();
-    const { data } = await supabase.from("galeria").select("*").order("ordem", { ascending: true });
+    const { data } = await supabase.from("galeria").select("*").order("criado_em", { ascending: false });
     setItems(data ?? []);
     setLoading(false);
   }
@@ -57,7 +57,7 @@ export default function GaleriaPage() {
       await supabase.from("galeria").insert({
         imagem_url: pub.publicUrl,
         ativo: true,
-        ordem: items.length,
+        ordem: 0,
       });
     }
     setUploading(false);
@@ -89,12 +89,12 @@ export default function GaleriaPage() {
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {items.map(g => (
             <div key={g.id} className={`card overflow-hidden ${!g.ativo ? "opacity-50" : ""}`}>
-              <div className="relative aspect-video bg-gray-100">
+              <div className="relative aspect-video bg-gray-900">
                 <Image
                   src={g.imagem_url}
                   alt={g.destino ?? "Galeria"}
                   fill
-                  className="object-cover"
+                  className="object-contain"
                   unoptimized
                 />
               </div>

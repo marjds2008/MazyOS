@@ -29,7 +29,8 @@ export default function ModalLead({ destino, estado, onClose }: Props) {
 
     try {
       const supabase = getSupabase();
-      await supabase.from("leads").insert({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase as any).from("leads").insert({
         nome:     nome.trim(),
         whatsapp: whatsapp.trim().replace(/\D/g, ""),
         cidade:   cidade.trim() || null,

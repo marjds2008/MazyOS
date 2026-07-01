@@ -36,9 +36,11 @@ export async function POST(request: Request) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         campanha_id:          campanha.id,
-        viagem_id:            campanha.viagem_id ?? null,
+        viagem_id:            campanha.viagem_id  ?? null,
         segmento:             campanha.segmento,
         mensagem:             campanha.mensagem,
+        imagem_url:           campanha.imagem_url ?? null,
+        audio_url:            campanha.audio_url  ?? null,
         delay_segundos:       parseInt(process.env.N8N_DELAY_SEGUNDOS ?? "3"),
         limite_por_execucao:  parseInt(process.env.N8N_LIMITE_POR_EXECUCAO ?? "50"),
       }),

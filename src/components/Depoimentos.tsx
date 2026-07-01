@@ -30,8 +30,9 @@ function Estrelas() {
   );
 }
 
-export default function Depoimentos() {
+export default function Depoimentos({ compact }: { compact?: boolean } = {}) {
   const [aberto, setAberto] = useState<number | null>(null);
+  const listaSecundaria = compact ? prints.slice(1, 4) : prints.slice(1);
 
   const fechar   = useCallback(() => setAberto(null), []);
   const anterior = useCallback(() =>
@@ -152,7 +153,7 @@ export default function Depoimentos() {
         </div>
 
         <div className="columns-1 sm:columns-2 lg:columns-3 gap-5">
-          {secundarios.map((print, i) => (
+          {listaSecundaria.map((print, i) => (
             <div key={print.src} className="break-inside-avoid mb-5">
               <button
                 onClick={() => setAberto(i + 1)}
@@ -180,10 +181,18 @@ export default function Depoimentos() {
           ))}
         </div>
 
-        {/* ── Texto final ── */}
-        <p className="text-center text-brand-muted text-sm mt-10 max-w-lg mx-auto leading-relaxed italic">
-          "Essas mensagens representam o carinho de passageiros que viveram momentos especiais com a Amo Viajar."
-        </p>
+        {/* ── Link ver todos (modo compacto) ── */}
+        {compact ? (
+          <div className="text-center mt-10">
+            <a href="/depoimentos" className="inline-flex items-center gap-2 bg-brand-primary text-white font-semibold px-8 py-3.5 rounded-full hover:bg-brand-dark transition-colors text-sm">
+              Ver todos os depoimentos
+            </a>
+          </div>
+        ) : (
+          <p className="text-center text-brand-muted text-sm mt-10 max-w-lg mx-auto leading-relaxed italic">
+            "Essas mensagens representam o carinho de passageiros que viveram momentos especiais com a Amo Viajar."
+          </p>
+        )}
       </div>
 
       {/* ── Lightbox ── */}

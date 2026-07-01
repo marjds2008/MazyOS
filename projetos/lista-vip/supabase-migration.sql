@@ -12,5 +12,15 @@ create table if not exists lista_vip (
 -- Índice pra evitar duplicatas de WhatsApp
 create unique index if not exists lista_vip_whatsapp_idx on lista_vip (whatsapp);
 
--- RLS: ninguém lê/escreve direto pelo cliente (só via API com service role)
+-- RLS ativado
 alter table lista_vip enable row level security;
+
+-- Qualquer visitante pode se inscrever (anon key no browser)
+create policy "Inscrição pública"
+  on lista_vip for insert
+  with check (true);
+
+-- Leitura bloqueada pra todo mundo (só via painel Supabase ou service role)
+create policy "Leitura bloqueada"
+  on lista_vip for select
+  using (false);

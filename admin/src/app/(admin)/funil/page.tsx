@@ -2,8 +2,8 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { MessageSquare, ExternalLink, ChevronRight } from "lucide-react";
-import type { Lead, StatusLead } from "@/types/database";
+import { MessageSquare, ExternalLink, ChevronRight, Plus, X } from "lucide-react";
+import type { Lead, StatusLead, Viagem } from "@/types/database";
 
 type LeadWithViagem = Lead & { viagens?: { titulo: string } | null };
 
@@ -27,10 +27,19 @@ const BADGE: Record<StatusLead, string> = {
   perdido:    "bg-gray-100 text-gray-500",
 };
 
+type NovoLead = { nome: string; whatsapp: string; cidade: string; viagem_id: string; mensagem: string; status: StatusLead };
+
+const LEAD_VAZIO: NovoLead = { nome: "", whatsapp: "", cidade: "", viagem_id: "", mensagem: "", status: "novo" };
+
 export default function FunilPage() {
   const [leads, setLeads]   = useState<LeadWithViagem[]>([]);
   const [etapa, setEtapa]   = useState<StatusLead | "todos">("todos");
   const [loading, setLoading] = useState(true);
+  const [modal, setModal]   = useState(false);
+  const [form, setForm]     = useState<NovoLead>(LEAD_VAZIO);
+  const [viagens, setViagens] = useState<Viagem[]>([]);
+  const [salvando, setSalvando] = useState(false);
+  const [erro, setErro]     = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -44,6 +53,41 @@ export default function FunilPage() {
   }, []);
 
   useEffect(() => { load(); }, [load]);
+
+  useEffect(() => {
+    createClient()
+      .from("viagens")
+      .select("id, titulo, destino, data_saida, status")
+      .in("status", ["aberta", "ultimas_vagas", "rascunho"])
+      .order("data_saida", { ascending: true })
+      .then(({ data }) => setViagens((data ?? []) as Viagem[]));
+  }, []);
+
+  function abrirModal() { setForm(LEAD_VAZIO); setErro(""); setModal(true); }
+
+  async function salvarLead() {
+    if (!form.nome.trim() || !form.whatsapp.trim()) {
+      setErro("Nome e WhatsApp são obrigatórios.");
+      return;
+    }
+    setSalvando(true);
+    setErro("");
+    const supabase = createClient();
+    const { error } = await supabase.from("leads").insert({
+      nome:     form.nome.trim(),
+      whatsapp: form.whatsapp.trim().replace(/\D/g, ""),
+      cidade:   form.cidade.trim() || null,
+      viagem_id: form.viagem_id || null,
+      mensagem: form.mensagem.trim() || null,
+      status:   form.status,
+      origem:   "manual",
+      quantidade_pessoas: 1,
+    });
+    setSalvando(false);
+    if (error) { setErro(error.message); return; }
+    setModal(false);
+    load();
+  }
 
   async function moverEtapa(id: string, status: StatusLead) {
     const supabase = createClient();
@@ -70,9 +114,14 @@ export default function FunilPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Funil Comercial</h1>
-        <p className="text-gray-500 text-sm mt-1">Acompanhe cada lead da captação até a viagem</p>
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Funil Comercial</h1>
+          <p className="text-gray-500 text-sm mt-1">Acompanhe cada lead da captação até a viagem</p>
+        </div>
+        <button onClick={abrirModal} className="btn-primary">
+          <Plus className="w-4 h-4" /> Novo Lead
+        </button>
       </div>
 
       {/* Pipeline */}
@@ -172,6 +221,70 @@ export default function FunilPage() {
           </div>
         )}
       </div>
+      {/* Modal novo lead */}
+      {modal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+          onClick={e => e.target === e.currentTarget && setModal(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+              <h2 className="text-lg font-bold text-gray-900">Novo Lead</h2>
+              <button onClick={() => setModal(false)} className="p-1.5 rounded-full hover:bg-gray-100 transition-colors">
+                <X className="w-4 h-4 text-gray-500" />
+              </button>
+            </div>
+
+            <div className="px-6 py-5 space-y-4">
+              <div>
+                <label className="label">Nome *</label>
+                <input className="input" placeholder="Maria Silva"
+                  value={form.nome} onChange={e => setForm(f => ({ ...f, nome: e.target.value }))} autoFocus />
+              </div>
+              <div>
+                <label className="label">WhatsApp *</label>
+                <input className="input" placeholder="21 99999-9999" inputMode="tel"
+                  value={form.whatsapp} onChange={e => setForm(f => ({ ...f, whatsapp: e.target.value }))} />
+              </div>
+              <div>
+                <label className="label">Cidade <span className="text-gray-400 font-normal">(opcional)</span></label>
+                <input className="input" placeholder="Rio de Janeiro"
+                  value={form.cidade} onChange={e => setForm(f => ({ ...f, cidade: e.target.value }))} />
+              </div>
+              <div>
+                <label className="label">Viagem de interesse <span className="text-gray-400 font-normal">(opcional)</span></label>
+                <select className="input" value={form.viagem_id} onChange={e => setForm(f => ({ ...f, viagem_id: e.target.value }))}>
+                  <option value="">— Sem viagem específica —</option>
+                  {viagens.map(v => (
+                    <option key={v.id} value={v.id}>{v.titulo}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="label">Etapa inicial</label>
+                <select className="input" value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value as StatusLead }))}>
+                  {ETAPAS.map(e => (
+                    <option key={e.status} value={e.status}>{e.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="label">Observação <span className="text-gray-400 font-normal">(opcional)</span></label>
+                <textarea className="input resize-none" rows={2} placeholder="Ex: Perguntou sobre Búzios em janeiro"
+                  value={form.mensagem} onChange={e => setForm(f => ({ ...f, mensagem: e.target.value }))} />
+              </div>
+
+              {erro && <p className="text-sm text-red-500">{erro}</p>}
+            </div>
+
+            <div className="px-6 pb-5 flex gap-3 justify-end">
+              <button onClick={() => setModal(false)} className="btn-secondary">Cancelar</button>
+              <button onClick={salvarLead} disabled={salvando} className="btn-primary">
+                <Plus className="w-4 h-4" />
+                {salvando ? "Salvando…" : "Salvar lead"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

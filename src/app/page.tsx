@@ -1,15 +1,11 @@
+import Link from "next/link";
 import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import SobreLisa from "@/components/SobreLisa";
 import CredenciaisLisa from "@/components/CredenciaisLisa";
-import VideoLisa from "@/components/VideoLisa";
-import Diferenciais from "@/components/Diferenciais";
 import Depoimentos from "@/components/Depoimentos";
-import ProximasViagens from "@/components/ProximasViagens";
-import Galeria from "@/components/Galeria";
-import NossaHistoria from "@/components/NossaHistoria";
+import ViagensDoBanco from "@/components/ViagensDoBanco";
 import ClubeSection from "@/components/ClubeSection";
-import Historias from "@/components/Historias";
 import CTAFinal from "@/components/CTAFinal";
 import Footer from "@/components/Footer";
 
@@ -18,40 +14,41 @@ export default function HomePage() {
     <>
       <Header />
       <main>
-        {/* 1 — Hero: pessoas em viagem */}
+        {/* 1 — Hero */}
         <HeroSection />
 
-        {/* 2 — Quem é a Lisa + CTA WhatsApp */}
+        {/* 2 — Próximas viagens (prioridade) */}
+        <ViagensDoBanco />
+
+        {/* 3 — Quem é a Lisa */}
         <SobreLisa />
+        <div className="bg-brand-warm pb-6 text-center">
+          <Link
+            href="/sobre"
+            className="text-brand-primary font-semibold text-sm hover:underline"
+          >
+            Conheça a história completa da Lisa →
+          </Link>
+        </div>
 
-        {/* 3 — Credenciais e experiência da Lisa */}
+        {/* 4 — Credenciais */}
         <CredenciaisLisa />
+        <div className="bg-white pb-8 text-center">
+          <Link
+            href="/sobre"
+            className="text-brand-primary font-semibold text-sm hover:underline"
+          >
+            Ver credenciais e história completa →
+          </Link>
+        </div>
 
-        {/* 4 — Vídeo institucional (placeholder) */}
-        <VideoLisa />
+        {/* 5 — Depoimentos (compacto) */}
+        <Depoimentos compact />
 
-        {/* 4 — Por que nos escolhem */}
-        <Diferenciais />
-
-        {/* 5 — Depoimentos com estrelas */}
-        <Depoimentos />
-
-        {/* 6 — Destinos reais com filtro por categoria */}
-        <ProximasViagens />
-
-        {/* 7 — Nossas Memórias: galeria 70% pessoas */}
-        <Galeria />
-
-        {/* 8 — Números que contam nossa história */}
-        <NossaHistoria />
-
-        {/* 9 — Família Amo Viajar: cadastro na comunidade */}
+        {/* 6 — Família Amo Viajar */}
         <ClubeSection />
 
-        {/* 10 — Mural da Comunidade: histórias reais */}
-        <Historias />
-
-        {/* 11 — CTA Final */}
+        {/* 7 — CTA Final */}
         <CTAFinal />
       </main>
       <Footer />

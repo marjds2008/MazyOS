@@ -4,21 +4,22 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { CampanhaWhatsapp, Viagem } from "@/types/database";
-import { Eye, EyeOff, Send, Save, Users, CheckCircle, XCircle } from "lucide-react";
+import { Eye, EyeOff, Send, Save, Users, CheckCircle, XCircle, Copy, ImageIcon, Mic, X } from "lucide-react";
 
 // ── Segmentos ───────────────────────────────────────────────
 
 const SEGMENTOS = [
-  { value: "lista_vip",             label: "Lista VIP",                        desc: "Pessoas cadastradas na lista VIP" },
-  { value: "todos_clientes",        label: "Todos os clientes",                 desc: "Todos os clientes cadastrados" },
-  { value: "leads_novos",           label: "Leads novos",                       desc: "Interessados ainda não contatados" },
-  { value: "leads_nao_convertidos", label: "Leads não convertidos",             desc: "Interessados sem fechamento" },
-  { value: "viagem_especifica",     label: "Interessados nesta viagem",         desc: "Requer selecionar uma viagem acima", requiresViagem: true },
-  { value: "categoria_praia",       label: "Interessados: Praia",               desc: "Clientes com interesse em praias" },
-  { value: "categoria_serra",       label: "Interessados: Serra",               desc: "Clientes com interesse em serra" },
-  { value: "categoria_cultura",     label: "Interessados: Cultura e História",  desc: "" },
-  { value: "categoria_fe",          label: "Interessados: Fé e Espiritualidade",desc: "" },
-  { value: "categoria_interior",    label: "Interessados: Interior RJ",         desc: "" },
+  { value: "todos_contatos",        label: "Todos (clientes + leads)",           desc: "Toda a base: clientes do CRM e leads do funil" },
+  { value: "lista_vip",             label: "Lista VIP",                          desc: "Pessoas cadastradas na lista VIP" },
+  { value: "todos_clientes",        label: "Todos os clientes",                  desc: "Todos os clientes cadastrados" },
+  { value: "leads_novos",           label: "Leads novos",                        desc: "Interessados ainda não contatados" },
+  { value: "leads_nao_convertidos", label: "Leads não convertidos",              desc: "Interessados sem fechamento" },
+  { value: "viagem_especifica",     label: "Interessados nesta viagem",          desc: "Requer selecionar uma viagem acima", requiresViagem: true },
+  { value: "categoria_praia",       label: "Interessados: Praia",                desc: "Clientes com interesse em praias" },
+  { value: "categoria_serra",       label: "Interessados: Serra",                desc: "Clientes com interesse em serra" },
+  { value: "categoria_cultura",     label: "Interessados: Cultura e História",   desc: "" },
+  { value: "categoria_fe",          label: "Interessados: Fé e Espiritualidade", desc: "" },
+  { value: "categoria_interior",    label: "Interessados: Interior RJ",          desc: "" },
 ];
 
 // ── Mensagem padrão ─────────────────────────────────────────
@@ -51,10 +52,12 @@ const VARIAVEIS = [
 // ── Tipos ───────────────────────────────────────────────────
 
 type FormData = {
-  titulo:    string;
-  viagem_id: string;
-  segmento:  string;
-  mensagem:  string;
+  titulo:     string;
+  viagem_id:  string;
+  segmento:   string;
+  mensagem:   string;
+  imagem_url: string;
+  audio_url:  string;
 };
 
 interface Props {
@@ -67,22 +70,29 @@ export default function CampanhaForm({ campanha }: Props) {
   const router    = useRouter();
   const isEdit    = !!campanha?.id;
   const isLocked  = campanha?.status === "enviada" || campanha?.status === "cancelada";
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const textareaRef  = useRef<HTMLTextAreaElement>(null);
+  const imgFileRef   = useRef<HTMLInputElement>(null);
+  const audioFileRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState<FormData>({
-    titulo:    campanha?.titulo    ?? "",
-    viagem_id: campanha?.viagem_id ?? "",
-    segmento:  campanha?.segmento  ?? "lista_vip",
-    mensagem:  campanha?.mensagem  ?? MENSAGEM_DEFAULT,
+    titulo:     campanha?.titulo     ?? "",
+    viagem_id:  campanha?.viagem_id  ?? "",
+    segmento:   campanha?.segmento   ?? "lista_vip",
+    mensagem:   campanha?.mensagem   ?? MENSAGEM_DEFAULT,
+    imagem_url: campanha?.imagem_url ?? "",
+    audio_url:  campanha?.audio_url  ?? "",
   });
-  const [viagens, setViagens]       = useState<Viagem[]>([]);
-  const [showPreview, setShowPreview] = useState(false);
-  const [contagem, setContagem]     = useState<number | null>(null);
-  const [contando, setContando]     = useState(false);
-  const [saving, setSaving]         = useState(false);
-  const [sending, setSending]       = useState(false);
-  const [erro, setErro]             = useState("");
-  const [sucesso, setSucesso]       = useState("");
+  const [viagens, setViagens]               = useState<Viagem[]>([]);
+  const [showPreview, setShowPreview]       = useState(false);
+  const [contagem, setContagem]             = useState<number | null>(null);
+  const [contando, setContando]             = useState(false);
+  const [saving, setSaving]                 = useState(false);
+  const [sending, setSending]               = useState(false);
+  const [duplicating, setDuplicating]       = useState(false);
+  const [uploadingImg, setUploadingImg]     = useState(false);
+  const [uploadingAudio, setUploadingAudio] = useState(false);
+  const [erro, setErro]                     = useState("");
+  const [sucesso, setSucesso]               = useState("");
 
   // Carregar viagens
   useEffect(() => {
@@ -139,6 +149,16 @@ export default function CampanhaForm({ campanha }: Props) {
     let count = 0;
 
     switch (form.segmento) {
+      case "todos_contatos": {
+        const [rClientes, rLeads] = await Promise.all([
+          supabase.from("clientes").select("*", { count: "exact", head: true })
+            .eq("opt_out", false).eq("aceitou_receber_mensagens", true),
+          supabase.from("leads").select("*", { count: "exact", head: true })
+            .in("status", ["novo", "contatado", "negociando"]),
+        ]);
+        count = (rClientes.count ?? 0) + (rLeads.count ?? 0);
+        break;
+      }
       case "lista_vip": {
         const r = await supabase.from("clientes").select("*", { count: "exact", head: true })
           .eq("opt_out", false).eq("aceitou_receber_mensagens", true).eq("origem", "lista_vip");
@@ -152,32 +172,52 @@ export default function CampanhaForm({ campanha }: Props) {
         break;
       }
       case "leads_novos": {
-        const r = await supabase.from("interesses").select("*", { count: "exact", head: true }).eq("status", "novo");
+        const r = await supabase.from("leads").select("*", { count: "exact", head: true }).eq("status", "novo");
         count = r.count ?? 0;
         break;
       }
       case "leads_nao_convertidos": {
-        const r = await supabase.from("interesses").select("*", { count: "exact", head: true })
+        const r = await supabase.from("leads").select("*", { count: "exact", head: true })
           .in("status", ["novo", "contatado", "negociando"]);
         count = r.count ?? 0;
         break;
       }
       case "viagem_especifica": {
         if (!form.viagem_id) { setContagem(0); setContando(false); return; }
-        const r = await supabase.from("interesses").select("*", { count: "exact", head: true }).eq("viagem_id", form.viagem_id);
+        const r = await supabase.from("leads").select("*", { count: "exact", head: true }).eq("viagem_id", form.viagem_id);
         count = r.count ?? 0;
         break;
       }
       default:
         if (form.segmento.startsWith("categoria_")) {
-          const cat = form.segmento.replace("categoria_", "");
-          const r = await supabase.from("interesses").select("*", { count: "exact", head: true }).eq("categoria", cat);
+          const r = await supabase.from("clientes").select("*", { count: "exact", head: true })
+            .eq("opt_out", false)
+            .eq("categoria_favorita", form.segmento.replace("categoria_", ""));
           count = r.count ?? 0;
         }
     }
     setContagem(count);
     setContando(false);
   }, [form.segmento, form.viagem_id]);
+
+  // Upload de mídia para o bucket midias-campanha
+  async function uploadMidia(file: File, tipo: "imagem" | "audio") {
+    tipo === "imagem" ? setUploadingImg(true) : setUploadingAudio(true);
+    setErro("");
+    const supabase = createClient();
+    const ext  = file.name.split(".").pop();
+    const path = `${tipo}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const { error } = await supabase.storage.from("midias-campanha").upload(path, file);
+    if (error) {
+      setErro(`Erro ao enviar ${tipo}: ${error.message}`);
+    } else {
+      const { data: pub } = supabase.storage.from("midias-campanha").getPublicUrl(path);
+      set(tipo === "imagem" ? "imagem_url" : "audio_url", pub.publicUrl);
+    }
+    tipo === "imagem" ? setUploadingImg(false) : setUploadingAudio(false);
+    if (tipo === "imagem" && imgFileRef.current)   imgFileRef.current.value   = "";
+    if (tipo === "audio"  && audioFileRef.current) audioFileRef.current.value = "";
+  }
 
   // Salvar rascunho ou marcar como pronta
   async function salvar(statusAlvo: "rascunho" | "pronta") {
@@ -194,12 +234,14 @@ export default function CampanhaForm({ campanha }: Props) {
     setErro("");
     const supabase = createClient();
     const payload = {
-      titulo:          form.titulo,
-      viagem_id:       form.viagem_id || null,
-      segmento:        form.segmento,
-      mensagem:        form.mensagem,
-      status:          statusAlvo,
-      total_contatos:  contagem ?? 0,
+      titulo:         form.titulo,
+      viagem_id:      form.viagem_id  || null,
+      segmento:       form.segmento,
+      mensagem:       form.mensagem,
+      imagem_url:     form.imagem_url || null,
+      audio_url:      form.audio_url  || null,
+      status:         statusAlvo,
+      total_contatos: contagem ?? 0,
     };
     const { error } = isEdit
       ? await supabase.from("campanhas_whatsapp").update(payload).eq("id", campanha!.id)
@@ -207,7 +249,7 @@ export default function CampanhaForm({ campanha }: Props) {
     if (error) { setErro(error.message); setSaving(false); return; }
     setSaving(false);
     setSucesso(statusAlvo === "pronta" ? "Campanha marcada como pronta!" : "Rascunho salvo.");
-    setTimeout(() => { router.push("/campanhas"); router.refresh(); }, 1200);
+    setTimeout(() => { router.push("/campanhas");  }, 1200);
   }
 
   // Enviar campanha via n8n
@@ -220,9 +262,15 @@ export default function CampanhaForm({ campanha }: Props) {
     if (!confirm(`Enviar campanha "${form.titulo}" para ${contagem ?? "?"} contatos?\n\nEsta ação não pode ser desfeita.`)) return;
     setSending(true);
     setErro("");
-    const res = await fetch("/api/campanhas/enviar", {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+    const anonKey    = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
+    const res = await fetch(`${supabaseUrl}/functions/v1/campanhas-enviar`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type":  "application/json",
+        "Authorization": `Bearer ${anonKey}`,
+        "apikey":        anonKey,
+      },
       body: JSON.stringify({ campanha_id: campanha!.id }),
     });
     if (!res.ok) {
@@ -233,7 +281,35 @@ export default function CampanhaForm({ campanha }: Props) {
     }
     setSending(false);
     setSucesso("Campanha enviada para o n8n! O disparo está em andamento.");
-    setTimeout(() => { router.push("/campanhas"); router.refresh(); }, 2000);
+    setTimeout(() => { router.push("/campanhas");  }, 2000);
+  }
+
+  async function duplicar() {
+    if (!campanha) return;
+    setDuplicating(true);
+    setErro("");
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from("campanhas_whatsapp")
+      .insert({
+        titulo:         `[Cópia] ${campanha.titulo}`,
+        viagem_id:      campanha.viagem_id  ?? null,
+        segmento:       campanha.segmento,
+        mensagem:       campanha.mensagem,
+        imagem_url:     campanha.imagem_url ?? null,
+        audio_url:      campanha.audio_url  ?? null,
+        status:         "rascunho",
+        total_contatos: campanha.total_contatos ?? 0,
+      })
+      .select("id")
+      .single();
+    if (error || !data) {
+      setErro("Erro ao duplicar campanha.");
+      setDuplicating(false);
+      return;
+    }
+    router.push(`/campanhas/editar?id=${data.id}`);
+    
   }
 
   const segmentoAtual = SEGMENTOS.find(s => s.value === form.segmento);
@@ -347,6 +423,106 @@ export default function CampanhaForm({ campanha }: Props) {
         </div>
       </div>
 
+      {/* Mídia */}
+      <div className="card p-6 space-y-5">
+        <h2 className="font-semibold text-gray-900 border-b border-gray-100 pb-3">Mídia (opcional)</h2>
+
+        <div className="grid sm:grid-cols-2 gap-6">
+
+          {/* Imagem */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <ImageIcon className="w-4 h-4 text-gray-500" />
+              <span className="text-sm font-medium text-gray-700">Imagem</span>
+              <span className="text-xs text-gray-400">(JPG, PNG, WebP)</span>
+            </div>
+
+            {form.imagem_url ? (
+              <div className="relative rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={form.imagem_url} alt="Preview" className="w-full h-40 object-contain" />
+                {!isLocked && (
+                  <button
+                    type="button"
+                    onClick={() => set("imagem_url", "")}
+                    className="absolute top-2 right-2 bg-white rounded-full p-1 shadow hover:bg-red-50 text-gray-500 hover:text-red-600 transition-colors"
+                    title="Remover imagem"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            ) : !isLocked ? (
+              <label className={`flex flex-col items-center justify-center gap-2 border-2 border-dashed border-gray-200 rounded-lg h-32 cursor-pointer hover:border-brand-primary hover:bg-amber-50 transition-colors ${uploadingImg ? "opacity-60 pointer-events-none" : ""}`}>
+                <ImageIcon className="w-6 h-6 text-gray-400" />
+                <span className="text-xs text-gray-500">{uploadingImg ? "Enviando…" : "Clique para selecionar"}</span>
+                <input
+                  ref={imgFileRef}
+                  type="file"
+                  accept="image/*"
+                  className="sr-only"
+                  disabled={uploadingImg || isLocked}
+                  onChange={e => { const f = e.target.files?.[0]; if (f) uploadMidia(f, "imagem"); }}
+                />
+              </label>
+            ) : (
+              <div className="h-32 flex items-center justify-center border border-gray-100 rounded-lg bg-gray-50">
+                <p className="text-xs text-gray-400">Sem imagem</p>
+              </div>
+            )}
+
+            <p className="text-xs text-gray-400">
+              Com imagem: o texto vira legenda da foto no WhatsApp.
+            </p>
+          </div>
+
+          {/* Áudio */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Mic className="w-4 h-4 text-gray-500" />
+              <span className="text-sm font-medium text-gray-700">Áudio</span>
+              <span className="text-xs text-gray-400">(OGG Opus recomendado)</span>
+            </div>
+
+            {form.audio_url ? (
+              <div className="space-y-2">
+                <audio controls src={form.audio_url} className="w-full" />
+                {!isLocked && (
+                  <button
+                    type="button"
+                    onClick={() => set("audio_url", "")}
+                    className="flex items-center gap-1.5 text-xs text-red-500 hover:text-red-700 transition-colors"
+                  >
+                    <X className="w-3.5 h-3.5" /> Remover áudio
+                  </button>
+                )}
+              </div>
+            ) : !isLocked ? (
+              <label className={`flex flex-col items-center justify-center gap-2 border-2 border-dashed border-gray-200 rounded-lg h-32 cursor-pointer hover:border-brand-primary hover:bg-amber-50 transition-colors ${uploadingAudio ? "opacity-60 pointer-events-none" : ""}`}>
+                <Mic className="w-6 h-6 text-gray-400" />
+                <span className="text-xs text-gray-500">{uploadingAudio ? "Enviando…" : "Clique para selecionar"}</span>
+                <input
+                  ref={audioFileRef}
+                  type="file"
+                  accept="audio/*"
+                  className="sr-only"
+                  disabled={uploadingAudio || isLocked}
+                  onChange={e => { const f = e.target.files?.[0]; if (f) uploadMidia(f, "audio"); }}
+                />
+              </label>
+            ) : (
+              <div className="h-32 flex items-center justify-center border border-gray-100 rounded-lg bg-gray-50">
+                <p className="text-xs text-gray-400">Sem áudio</p>
+              </div>
+            )}
+
+            <p className="text-xs text-gray-400">
+              OGG aparece como mensagem de voz. MP3 chega como arquivo anexo.
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Avisos */}
       <div className="card p-4 bg-amber-50 border-amber-200 space-y-1.5">
         <p className="text-xs font-semibold text-amber-800">⚠️ Boas práticas de WhatsApp</p>
@@ -389,8 +565,21 @@ export default function CampanhaForm({ campanha }: Props) {
       )}
 
       {isLocked && (
-        <div className="card p-4 text-center text-gray-500 text-sm">
-          Esta campanha está <strong>{campanha?.status === "enviada" ? "enviada" : "cancelada"}</strong> e não pode ser editada.
+        <div className="card p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="text-gray-500 text-sm">
+            Esta campanha está <strong>{campanha?.status === "enviada" ? "enviada" : "cancelada"}</strong> e não pode ser editada.
+          </p>
+          {campanha?.status === "enviada" && (
+            <button
+              type="button"
+              onClick={duplicar}
+              disabled={duplicating}
+              className="btn-secondary shrink-0"
+            >
+              <Copy className="w-4 h-4" />
+              {duplicating ? "Duplicando…" : "Duplicar e reenviar"}
+            </button>
+          )}
         </div>
       )}
     </div>

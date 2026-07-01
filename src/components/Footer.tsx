@@ -3,6 +3,14 @@ import Logo from "@/components/Logo";
 
 const WHATSAPP_NUMBER = "5521985131616";
 
+const footerNav = [
+  { href: "/sobre",       label: "Sobre a Lisa" },
+  { href: "/viagens",     label: "Próximas Viagens" },
+  { href: "/destinos",    label: "Destinos" },
+  { href: "/depoimentos", label: "Depoimentos" },
+  { href: "/clube",       label: "Família Amo Viajar" },
+];
+
 export default function Footer() {
   const year = new Date().getFullYear();
 
@@ -31,17 +39,11 @@ export default function Footer() {
           <div>
             <h4 className="font-semibold text-white mb-4">Navegação</h4>
             <ul className="space-y-2 text-sm text-gray-400">
-              {[
-                ["#sobre", "Sobre a Lisa"],
-                ["#viagens", "Próximas Viagens"],
-                ["#depoimentos", "Depoimentos"],
-                ["#clube", "Clube Amo Viajar"],
-                ["#historias", "Histórias"],
-              ].map(([href, label]) => (
+              {footerNav.map(({ href, label }) => (
                 <li key={href}>
-                  <a href={href} className="hover:text-brand-primary transition-colors">
+                  <Link href={href} className="hover:text-brand-primary transition-colors">
                     {label}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>

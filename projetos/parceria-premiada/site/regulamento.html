@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Regulamento — Sorteio Parceria Premiada</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --roxo: #4D0AA4; --roxo-escuro: #36077A;
+    --dourado: #F5A623; --branco: #FFFFFF;
+    --cinza-claro: #F7F4FF; --cinza-texto: #4A4560; --texto: #1A1030;
+  }
+  body { font-family: 'Inter', sans-serif; background: var(--cinza-claro); color: var(--texto); }
+  header {
+    background: rgba(77,10,164,0.97); padding: 16px 24px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  header img { height: 36px; width: 36px; border-radius: 8px; object-fit: cover; }
+  header span { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 15px; color: var(--branco); }
+  .hero-reg {
+    background: linear-gradient(160deg, var(--roxo-escuro), var(--roxo));
+    padding: 48px 24px 40px; text-align: center; color: var(--branco);
+  }
+  .hero-reg h1 {
+    font-family: 'Syne', sans-serif; font-weight: 800;
+    font-size: clamp(1.4rem, 4vw, 2rem); margin-bottom: 8px;
+  }
+  .hero-reg p { color: rgba(255,255,255,0.7); font-size: 14px; }
+  .container { max-width: 760px; margin: 0 auto; padding: 48px 24px 64px; }
+  .secao {
+    background: var(--branco); border-radius: 16px; padding: 28px 32px;
+    margin-bottom: 16px; box-shadow: 0 2px 12px rgba(77,10,164,0.06);
+  }
+  .secao-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px; background: var(--roxo); color: var(--branco);
+    border-radius: 50%; font-family: 'Syne', sans-serif; font-weight: 800;
+    font-size: 13px; margin-right: 10px; flex-shrink: 0;
+  }
+  .secao h2 {
+    font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.1rem;
+    color: var(--texto); margin-bottom: 14px; display: flex; align-items: center;
+  }
+  .secao p, .secao li { font-size: 14px; color: var(--cinza-texto); line-height: 1.8; }
+  .secao ul { padding-left: 20px; margin-top: 8px; }
+  .secao ul li { margin-bottom: 6px; }
+  .destaque {
+    background: var(--cinza-claro); border-left: 3px solid var(--roxo);
+    border-radius: 0 10px 10px 0; padding: 12px 16px;
+    margin: 12px 0; font-size: 14px; color: var(--cinza-texto);
+  }
+  footer {
+    text-align: center; padding: 24px; font-size: 12px;
+    color: var(--cinza-texto); border-top: 1px solid #EDE8FA;
+  }
+  footer a { color: var(--roxo); text-decoration: none; }
+  .btn-voltar {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--roxo); color: var(--branco); font-weight: 600;
+    font-size: 14px; padding: 12px 24px; border-radius: 50px;
+    text-decoration: none; margin-bottom: 32px;
+  }
+  .secao a { color: var(--roxo); }
+</style>
+</head>
+<body>
+
+<header>
+  <img src="logo.png" alt="Parceria Premiada">
+  <span>Parceria Premiada</span>
+</header>
+
+<div class="hero-reg">
+  <h1>Regulamento do Sorteio</h1>
+  <p id="hero-desc">Carregando...</p>
+</div>
+
+<div class="container">
+  <a href="#" id="btn-voltar" class="btn-voltar">← Voltar para o sorteio</a>
+  <div id="secoes"></div>
+  <p style="text-align:center;font-size:12px;color:var(--cinza-texto);margin-top:8px;">
+    Regulamento sujeito a alterações. Versão publicada em junho/2026.
+  </p>
+</div>
+
+<footer>
+  © 2026 Parceria Premiada · <a href="#" id="footer-link">Voltar ao sorteio</a>
+</footer>
+
+<script src="js/campaigns.js"></script>
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const slugParam = params.get('campaign') || params.get('slug');
+  const campaign = slugParam ? getCampaign(slugParam) : getDefaultCampaign();
+
+  const voltarUrl = campaign ? `campaign.html?slug=${campaign.slug}` : 'campaign.html';
+  document.getElementById('btn-voltar').href = voltarUrl;
+  document.getElementById('footer-link').href = voltarUrl;
+
+  if (campaign) {
+    document.title = `Regulamento — Sorteio ${campaign.destination} | Parceria Premiada`;
+    document.getElementById('hero-desc').textContent =
+      `${campaign.destination} – ${campaign.location.split('·')[1].trim()} · Sorteio em ${campaign.drawDateShort}`;
+
+    document.getElementById('secoes').innerHTML = campaign.regulationSections.map(sec => `
+      <div class="secao" ${sec.id ? `id="${sec.id}"` : ''}>
+        <h2><span class="secao-num">${sec.num}</span>${sec.title}</h2>
+        ${sec.html}
+      </div>
+    `).join('');
+  } else {
+    document.getElementById('secoes').innerHTML = '<p style="text-align:center;padding:40px;">Regulamento não encontrado.</p>';
+  }
+
+  // Navegar até âncora #privacidade se vier do link footer
+  if (window.location.hash) {
+    setTimeout(() => {
+      const el = document.getElementById(window.location.hash.slice(1));
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
+  }
+</script>
+</body>
+</html>

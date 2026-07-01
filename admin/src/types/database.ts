@@ -4,6 +4,12 @@ export type StatusLead    = "novo" | "contatado" | "negociando" | "reservado" | 
 export type StatusCampanha = "rascunho" | "pronta" | "enviada" | "cancelada";
 export type StatusEnvio   = "pendente" | "enviado" | "erro" | "ignorado_opt_out";
 
+export interface LoteViagem {
+  numero: number;
+  vagas: number;
+  valor: number;
+}
+
 export interface Viagem {
   id: string;
   titulo: string;
@@ -22,6 +28,8 @@ export interface Viagem {
   parcelamento?: string;
   vagas_totais?: number;
   vagas_disponiveis?: number;
+  lotes_ativo?: boolean;
+  lotes?: LoteViagem[];
   incluso?: string[];
   nao_incluso?: string[];
   roteiro?: string;
@@ -78,6 +86,18 @@ export interface GaleriaItem {
   criado_em: string;
 }
 
+// ── Pontos de embarque ─────────────────────────────────────
+
+export interface PontoEmbarque {
+  id: string;
+  nome: string;
+  endereco?: string;
+  horario_padrao?: string;
+  ativo: boolean;
+  ordem: number;
+  criado_em: string;
+}
+
 // ── CRM ────────────────────────────────────────────────────
 
 export type CategoriaFavorita = "serra" | "praia" | "cultura" | "fe" | "interior_rj";
@@ -117,9 +137,17 @@ export interface Participacao {
   viagem_id?: string;
   destino?: string;
   data_viagem?: string;
+  valor?: number;
   observacoes?: string;
   criado_em: string;
   viagens?: Pick<Viagem, "id" | "titulo" | "destino" | "categoria">;
+}
+
+export interface NotaCliente {
+  id: string;
+  cliente_id: string;
+  texto: string;
+  criado_em: string;
 }
 
 // ── Campanhas WhatsApp ──────────────────────────────────────
@@ -130,6 +158,8 @@ export interface CampanhaWhatsapp {
   viagem_id?: string;
   segmento: string;
   mensagem: string;
+  imagem_url?: string;
+  audio_url?: string;
   status: StatusCampanha;
   criado_por?: string;
   total_contatos: number;

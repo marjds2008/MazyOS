@@ -1,0 +1,63 @@
+version: "3.8"
+
+services:
+
+  # ──────────────────────────────────────────────────────────────
+  # SERVIÇO 1 — Landing Pública
+  # parceriapremiada.app.br
+  # ──────────────────────────────────────────────────────────────
+  parceria_site:
+    image: parceria_site:prod
+    build:
+      context: ../projetos/parceria-premiada/site
+      dockerfile: Dockerfile
+    networks:
+      - starlink
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      labels:
+        - traefik.enable=true
+        - traefik.docker.network=starlink
+        - "traefik.http.routers.parceria-site.rule=Host(`parceriapremiada.app.br`)"
+        - traefik.http.routers.parceria-site.entrypoints=websecure
+        - traefik.http.routers.parceria-site.tls=true
+        - traefik.http.routers.parceria-site.tls.certresolver=letsencryptresolver
+        - traefik.http.services.parceria-site.loadbalancer.server.port=8080
+
+  # ──────────────────────────────────────────────────────────────
+  # SERVIÇO 2 — Admin BackOffice
+  # admin.parceriapremiada.app.br
+  # ──────────────────────────────────────────────────────────────
+  parceria_admin:
+    image: parceria_admin:prod
+    build:
+      context: ../admin
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: ${SUPABASE_URL}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+    networks:
+      - starlink
+    environment:
+      - NODE_ENV=production
+      - N8N_WEBHOOK_URL=${N8N_WEBHOOK_URL}
+      - N8N_DELAY_SEGUNDOS=${N8N_DELAY_SEGUNDOS:-3}
+      - N8N_LIMITE_POR_EXECUCAO=${N8N_LIMITE_POR_EXECUCAO:-50}
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      labels:
+        - traefik.enable=true
+        - traefik.docker.network=starlink
+        - "traefik.http.routers.parceria-admin.rule=Host(`admin.parceriapremiada.app.br`)"
+        - traefik.http.routers.parceria-admin.entrypoints=websecure
+        - traefik.http.routers.parceria-admin.tls=true
+        - traefik.http.routers.parceria-admin.tls.certresolver=letsencryptresolver
+        - traefik.http.services.parceria-admin.loadbalancer.server.port=3000
+
+networks:
+  starlink:
+    external: true

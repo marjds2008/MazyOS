@@ -1,0 +1,8 @@
+{
+  "name": "parceria-premiada",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "npx serve . --listen 3002",
+    "start": "npx serve . --listen 3002"
+  }
+}

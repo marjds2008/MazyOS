@@ -2,9 +2,10 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Search, MessageSquare, ExternalLink, UserX, UserCheck, Plus, Pencil } from "lucide-react";
+import { Search, MessageSquare, ExternalLink, UserX, UserCheck, Plus, Pencil, Upload } from "lucide-react";
 import ClienteForm from "@/components/ClienteForm";
 import ClienteDetalhe from "@/components/ClienteDetalhe";
+import ImportarClientesModal from "@/components/ImportarClientesModal";
 import type { Cliente } from "@/types/database";
 
 const ORIGENS: Record<string, string> = {
@@ -30,6 +31,7 @@ export default function ClientesPage() {
   const [loading, setLoading]         = useState(true);
   const [modal, setModal]             = useState<"novo" | Cliente | null>(null);
   const [detalhe, setDetalhe]         = useState<Cliente | null>(null);
+  const [importar, setImportar]       = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -80,9 +82,14 @@ export default function ClientesPage() {
           <h1 className="text-2xl font-bold text-gray-900">Clientes</h1>
           <p className="text-gray-500 text-sm mt-1">CRM de contatos da Amo Viajar</p>
         </div>
-        <button onClick={() => setModal("novo")} className="btn-primary flex items-center gap-2">
-          <Plus className="w-4 h-4" /> Novo cliente
-        </button>
+        <div className="flex gap-2">
+          <button onClick={() => setImportar(true)} className="btn-secondary flex items-center gap-2">
+            <Upload className="w-4 h-4" /> Importar CSV
+          </button>
+          <button onClick={() => setModal("novo")} className="btn-primary flex items-center gap-2">
+            <Plus className="w-4 h-4" /> Novo cliente
+          </button>
+        </div>
       </div>
 
       {/* Stats */}
@@ -224,6 +231,13 @@ export default function ClientesPage() {
           cliente={detalhe}
           onClose={() => setDetalhe(null)}
           onEditar={() => { setModal(detalhe); setDetalhe(null); }}
+        />
+      )}
+
+      {importar && (
+        <ImportarClientesModal
+          onClose={() => setImportar(false)}
+          onSaved={() => { setImportar(false); load(); }}
         />
       )}
     </div>

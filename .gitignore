@@ -23,14 +23,37 @@ out/
 next-env.d.ts
 tsconfig.tsbuildinfo
 
-# Env local
+# Build / dist genéricos
+dist/
+build/
+coverage/
+
+# Variáveis de ambiente — NUNCA versionar
+.env
 .env.local
 .env*.local
 admin/.env
+deploy/.env
+
+# Logs
+*.log
+logs/
+npm-debug.log*
 
 # Arquivos temporários
-*.log
 *.tmp
+.cache/
+
+# Docker volumes e dados locais
+docker-volumes/
+data/postgres/
+data/redis/
+
+# Scripts de teste locais com credenciais — nunca versionar
+scratch/
+
+# Build artifacts de subprojetos
+projetos/dose-dupla-hub/site/dist/
 
 # Drop zone do usuário (só o README vai versionado)
 dados/*

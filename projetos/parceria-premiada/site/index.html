@@ -1,0 +1,1182 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sorteio — Final de Semana em Minas Gerais | Parceria Premiada</title>
+<meta name="description" content="Concorra a uma viagem para Santa Rita de Jacutinga, MG! Sorteio gratuito da Parceria Premiada com a Amo Viajar. 17 a 19 de julho de 2026.">
+<script>
+  // Sprint 2: index.html redireciona para o template dinâmico de campanha
+  // Para trocar a campanha padrão, altere o slug abaixo ou carregue de campaigns.js
+  window.location.replace('campaign.html?slug=santa-rita-jacutinga');
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --roxo: #4D0AA4;
+    --roxo-escuro: #36077A;
+    --roxo-claro: #7B2FD4;
+    --dourado: #F5A623;
+    --dourado-claro: #FFD07A;
+    --verde: #1DB954;
+    --branco: #FFFFFF;
+    --cinza-claro: #F7F4FF;
+    --cinza-texto: #4A4560;
+    --texto: #1A1030;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--branco);
+    color: var(--texto);
+    overflow-x: hidden;
+  }
+
+  /* ── HEADER ── */
+  header {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(77, 10, 164, 0.97);
+    backdrop-filter: blur(8px);
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+  }
+
+  .logo-img {
+    height: 40px;
+    width: 40px;
+    border-radius: 8px;
+    object-fit: cover;
+  }
+
+  .header-cta {
+    background: var(--dourado);
+    color: var(--texto);
+    font-weight: 600;
+    font-size: 13px;
+    padding: 8px 16px;
+    border-radius: 20px;
+    text-decoration: none;
+    transition: background 0.2s;
+  }
+  .header-cta:hover { background: var(--dourado-claro); }
+
+  /* ── HERO ── */
+  .hero {
+    min-height: 100vh;
+    background: linear-gradient(160deg, var(--roxo-escuro) 0%, var(--roxo) 50%, #8B35E8 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 100px 24px 60px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(245, 166, 35, 0.2);
+    border: 1px solid rgba(245, 166, 35, 0.4);
+    color: var(--dourado-claro);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    border-radius: 20px;
+    margin-bottom: 24px;
+  }
+
+  .hero-badge::before { content: '🎁'; font-size: 14px; }
+
+  .hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: clamp(2rem, 6vw, 3.8rem);
+    color: var(--branco);
+    line-height: 1.1;
+    max-width: 780px;
+    margin-bottom: 16px;
+  }
+
+  .hero h1 em {
+    font-style: normal;
+    color: var(--dourado);
+  }
+
+  .hero-sub {
+    font-size: clamp(1rem, 2.5vw, 1.2rem);
+    color: rgba(255,255,255,0.75);
+    max-width: 560px;
+    line-height: 1.6;
+    margin-bottom: 40px;
+  }
+
+  /* Countdown */
+  .countdown {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    margin-bottom: 40px;
+  }
+
+  .countdown-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 12px;
+    padding: 12px 20px;
+    min-width: 70px;
+  }
+
+  .countdown-num {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 2rem;
+    color: var(--dourado);
+    line-height: 1;
+  }
+
+  .countdown-label {
+    font-size: 10px;
+    color: rgba(255,255,255,0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-top: 4px;
+  }
+
+  .hero-cta-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+  }
+
+  .btn-principal {
+    background: var(--dourado);
+    color: var(--texto);
+    font-weight: 700;
+    font-size: 16px;
+    padding: 16px 32px;
+    border-radius: 50px;
+    text-decoration: none;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 20px rgba(245,166,35,0.4);
+  }
+  .btn-principal:hover {
+    background: var(--dourado-claro);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(245,166,35,0.5);
+  }
+
+  .btn-secundario {
+    background: transparent;
+    color: var(--branco);
+    font-weight: 500;
+    font-size: 15px;
+    padding: 16px 28px;
+    border-radius: 50px;
+    text-decoration: none;
+    border: 1.5px solid rgba(255,255,255,0.35);
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .btn-secundario:hover {
+    border-color: rgba(255,255,255,0.7);
+    background: rgba(255,255,255,0.08);
+  }
+
+  .hero-nota {
+    margin-top: 20px;
+    font-size: 12px;
+    color: rgba(255,255,255,0.45);
+  }
+
+  /* ── DESTAQUE VIAGEM ── */
+  .destaque {
+    background: var(--cinza-claro);
+    padding: 80px 24px;
+  }
+
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+  }
+
+  .secao-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--roxo);
+    margin-bottom: 8px;
+  }
+
+  .secao-titulo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: clamp(1.6rem, 4vw, 2.4rem);
+    color: var(--texto);
+    line-height: 1.2;
+    margin-bottom: 16px;
+  }
+
+  .secao-sub {
+    font-size: 1rem;
+    color: var(--cinza-texto);
+    line-height: 1.7;
+    max-width: 600px;
+    margin-bottom: 48px;
+  }
+
+  .premio-card {
+    background: var(--branco);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 4px 40px rgba(77,10,164,0.08);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+  }
+
+  .premio-visual {
+    background: linear-gradient(135deg, var(--roxo) 0%, #8B35E8 100%);
+    padding: 48px 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 400px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .premio-visual::after {
+    content: '🌄';
+    position: absolute;
+    bottom: -10px;
+    right: -10px;
+    font-size: 140px;
+    opacity: 0.15;
+    line-height: 1;
+  }
+
+  .premio-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255,255,255,0.15);
+    color: var(--branco);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 20px;
+    width: fit-content;
+    margin-bottom: 24px;
+  }
+
+  .premio-nome {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.8rem;
+    color: var(--branco);
+    line-height: 1.2;
+    margin-bottom: 8px;
+  }
+
+  .premio-local {
+    color: rgba(255,255,255,0.7);
+    font-size: 0.9rem;
+  }
+
+  .premio-data-box {
+    background: var(--dourado);
+    border-radius: 12px;
+    padding: 16px 20px;
+    width: fit-content;
+    margin-top: 32px;
+  }
+
+  .premio-data-box .data-titulo {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(26,16,48,0.6);
+    margin-bottom: 2px;
+  }
+
+  .premio-data-box .data-valor {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: var(--texto);
+  }
+
+  .premio-info {
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .premio-info h3 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.3rem;
+    color: var(--texto);
+    margin-bottom: 20px;
+  }
+
+  .itinerario {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 32px;
+  }
+
+  .itinerario li {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    font-size: 0.9rem;
+    color: var(--cinza-texto);
+    line-height: 1.5;
+  }
+
+  .itinerario li::before {
+    content: attr(data-icone);
+    font-size: 16px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .parceiro-selo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: var(--cinza-claro);
+    border-radius: 10px;
+    font-size: 12px;
+    color: var(--cinza-texto);
+  }
+
+  .parceiro-selo strong {
+    color: var(--roxo);
+    font-weight: 600;
+  }
+
+  /* ── COMO PARTICIPAR ── */
+  .como {
+    padding: 80px 24px;
+    background: var(--branco);
+  }
+
+  .passos {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin-top: 48px;
+  }
+
+  .passo {
+    text-align: center;
+    padding: 32px 24px;
+    border-radius: 16px;
+    border: 1.5px solid #EDE8FA;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .passo:hover {
+    border-color: var(--roxo-claro);
+    box-shadow: 0 4px 20px rgba(77,10,164,0.08);
+  }
+
+  .passo-num {
+    width: 48px; height: 48px;
+    background: var(--roxo);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.2rem;
+    color: var(--branco);
+    margin: 0 auto 16px;
+  }
+
+  .passo h4 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--texto);
+    margin-bottom: 8px;
+  }
+
+  .passo p {
+    font-size: 0.875rem;
+    color: var(--cinza-texto);
+    line-height: 1.6;
+  }
+
+  /* ── FORMULÁRIO ── */
+  .cadastro {
+    background: linear-gradient(160deg, var(--roxo-escuro) 0%, var(--roxo) 100%);
+    padding: 80px 24px;
+    text-align: center;
+  }
+
+  .cadastro .secao-titulo {
+    color: var(--branco);
+    margin-bottom: 8px;
+  }
+
+  .cadastro .secao-sub {
+    color: rgba(255,255,255,0.7);
+    margin: 0 auto 40px;
+  }
+
+  .form-card {
+    background: var(--branco);
+    border-radius: 20px;
+    padding: 40px;
+    max-width: 520px;
+    margin: 0 auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+  }
+
+  .form-card h3 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.3rem;
+    color: var(--texto);
+    margin-bottom: 8px;
+  }
+
+  .form-card p {
+    font-size: 0.875rem;
+    color: var(--cinza-texto);
+    margin-bottom: 28px;
+    line-height: 1.5;
+  }
+
+  .campo {
+    margin-bottom: 16px;
+    text-align: left;
+  }
+
+  .campo label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--cinza-texto);
+    margin-bottom: 6px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .campo input {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1.5px solid #E0D9F5;
+    border-radius: 10px;
+    font-size: 15px;
+    font-family: 'Inter', sans-serif;
+    color: var(--texto);
+    background: #FAFAFA;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+  }
+  .campo input:focus {
+    border-color: var(--roxo);
+    box-shadow: 0 0 0 3px rgba(77,10,164,0.1);
+    background: var(--branco);
+  }
+
+  .campo input::placeholder { color: #B0A8CC; }
+
+  .btn-cadastro {
+    width: 100%;
+    background: var(--roxo);
+    color: var(--branco);
+    font-weight: 700;
+    font-size: 16px;
+    padding: 16px;
+    border-radius: 50px;
+    border: none;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.2s;
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .btn-cadastro:hover {
+    background: var(--roxo-escuro);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(77,10,164,0.35);
+  }
+
+  .form-nota {
+    font-size: 11px;
+    color: #B0A8CC;
+    margin-top: 16px;
+    line-height: 1.5;
+  }
+
+  /* Sucesso */
+  .sucesso {
+    display: none;
+    text-align: center;
+    padding: 20px 0;
+  }
+  .sucesso-icone {
+    font-size: 3rem;
+    margin-bottom: 12px;
+  }
+  .sucesso h4 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.3rem;
+    color: var(--texto);
+    margin-bottom: 8px;
+  }
+  .sucesso p {
+    font-size: 0.9rem;
+    color: var(--cinza-texto);
+    line-height: 1.6;
+    margin-bottom: 20px;
+  }
+  .btn-whatsapp {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #25D366;
+    color: var(--branco);
+    font-weight: 700;
+    font-size: 15px;
+    padding: 14px 28px;
+    border-radius: 50px;
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+  .btn-whatsapp:hover { background: #1ebe5a; }
+
+  /* ── PARCEIROS ── */
+  .parceiros {
+    padding: 60px 24px;
+    background: var(--cinza-claro);
+    text-align: center;
+  }
+
+  .parceiros-lista {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    justify-content: center;
+    margin-top: 32px;
+  }
+
+  .parceiro-chip {
+    background: var(--branco);
+    border: 1.5px solid #EDE8FA;
+    border-radius: 50px;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--roxo);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .parceiro-logo {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1.5px solid #EDE8FA;
+    flex-shrink: 0;
+  }
+
+  .obrigatorio { color: var(--roxo); }
+  .opcional { color: #B0A8CC; font-size: 11px; font-weight: 400; }
+
+  .campos-linha {
+    display: grid;
+    grid-template-columns: 1fr 80px;
+    gap: 12px;
+  }
+
+  .campo select {
+    width: 100%;
+    padding: 14px 12px;
+    border: 1.5px solid #E0D9F5;
+    border-radius: 10px;
+    font-size: 15px;
+    font-family: 'Inter', sans-serif;
+    color: var(--texto);
+    background: #FAFAFA;
+    transition: border-color 0.2s;
+    outline: none;
+    appearance: none;
+  }
+  .campo select:focus {
+    border-color: var(--roxo);
+    box-shadow: 0 0 0 3px rgba(77,10,164,0.1);
+    background: var(--branco);
+  }
+
+  .campo-check { margin-top: 4px; }
+  .label-check {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--cinza-texto);
+    line-height: 1.5;
+  }
+  .label-check input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+    margin-top: 1px;
+    accent-color: var(--roxo);
+    cursor: pointer;
+  }
+  .label-check a { color: var(--roxo); }
+
+  .form-erro {
+    background: #FFF0F0;
+    border: 1px solid #FFCDD2;
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: #C62828;
+    margin-bottom: 8px;
+  }
+
+  /* ── TRANSPARÊNCIA ── */
+  .transparencia {
+    padding: 80px 24px;
+    background: var(--roxo-escuro);
+    text-align: center;
+  }
+
+  .transparencia .secao-label { color: rgba(255,255,255,0.5); }
+  .transparencia .secao-titulo { color: var(--branco); }
+  .transparencia .secao-sub { color: rgba(255,255,255,0.65); margin: 0 auto 40px; }
+
+  .trans-cards {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    max-width: 700px;
+    margin: 0 auto 32px;
+  }
+
+  .trans-card {
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 14px;
+    padding: 20px;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+    color: rgba(255,255,255,0.85);
+    font-weight: 500;
+  }
+
+  .trans-card-icone {
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+
+  /* parceiros com Instagram */
+  .parceiro-detalhe {
+    text-align: center;
+    background: var(--branco);
+    border: 1.5px solid #EDE8FA;
+    border-radius: 16px;
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    min-width: 140px;
+  }
+
+  .parceiro-detalhe img {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #EDE8FA;
+  }
+
+  .parceiro-detalhe .p-nome {
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--texto);
+  }
+
+  .parceiro-detalhe .p-insta {
+    font-size: 12px;
+    color: var(--roxo);
+    font-weight: 500;
+  }
+
+  .parceiro-detalhe .p-cat {
+    font-size: 11px;
+    color: var(--cinza-texto);
+    background: var(--cinza-claro);
+    border-radius: 20px;
+    padding: 2px 10px;
+  }
+
+  .parceiros-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    justify-content: center;
+    margin-top: 32px;
+  }
+
+  @media (max-width: 680px) {
+    .trans-cards { grid-template-columns: 1fr; }
+    .campos-linha { grid-template-columns: 1fr 70px; }
+  }
+
+  .btn-parceiro {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--roxo);
+    color: var(--branco);
+    font-weight: 600;
+    font-size: 14px;
+    padding: 12px 24px;
+    border-radius: 50px;
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+  .btn-parceiro:hover {
+    background: var(--roxo-escuro);
+    transform: translateY(-1px);
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    background: var(--roxo-escuro);
+    color: rgba(255,255,255,0.6);
+    padding: 40px 24px;
+    text-align: center;
+    font-size: 13px;
+    line-height: 1.8;
+  }
+
+  footer a {
+    color: var(--dourado-claro);
+    text-decoration: none;
+  }
+
+  footer strong {
+    color: var(--branco);
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 680px) {
+    .premio-card { grid-template-columns: 1fr; }
+    .passos { grid-template-columns: 1fr; }
+    .countdown { gap: 8px; }
+    .countdown-item { min-width: 58px; padding: 10px 12px; }
+    .countdown-num { font-size: 1.5rem; }
+    .form-card { padding: 28px 20px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <a href="#" class="logo">
+    <img src="logo.png" alt="Parceria Premiada" class="logo-img">
+  </a>
+  <a href="#cadastro" class="header-cta">Participar grátis →</a>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge">Sorteio gratuito · Encerra em breve</div>
+  <h1>Ganhe uma viagem para <em>Minas Gerais</em> com tudo incluído</h1>
+  <p class="hero-sub">Participe gratuitamente do sorteio de lançamento da Parceria Premiada e concorra a um final de semana inesquecível em Santa Rita de Jacutinga – MG, com a Amo Viajar.</p>
+
+  <div class="countdown" id="countdown">
+    <div class="countdown-item">
+      <span class="countdown-num" id="cd-dias">19</span>
+      <span class="countdown-label">dias</span>
+    </div>
+    <div class="countdown-item">
+      <span class="countdown-num" id="cd-horas">00</span>
+      <span class="countdown-label">horas</span>
+    </div>
+    <div class="countdown-item">
+      <span class="countdown-num" id="cd-min">00</span>
+      <span class="countdown-label">min</span>
+    </div>
+    <div class="countdown-item">
+      <span class="countdown-num" id="cd-seg">00</span>
+      <span class="countdown-label">seg</span>
+    </div>
+  </div>
+
+  <div class="hero-cta-group">
+    <a href="#cadastro" class="btn-principal">🎯 Quero participar agora</a>
+    <a href="#como" class="btn-secundario">Como funciona</a>
+  </div>
+  <p class="hero-nota">Gratuito • Sorteio em 15/07/2026 • Resultado pelo Instagram e WhatsApp</p>
+</section>
+
+<!-- DESTAQUE DA VIAGEM -->
+<section class="destaque">
+  <div class="container">
+    <p class="secao-label">O prêmio</p>
+    <h2 class="secao-titulo">Uma experiência completa<br>nas montanhas de Minas</h2>
+    <p class="secao-sub">Hotel fazenda, cachoeiras, gastronomia típica e passeios inesquecíveis. Tudo organizado pela Amo Viajar para você curtir sem preocupação.</p>
+
+    <div class="premio-card">
+      <div class="premio-visual">
+        <div>
+          <div class="premio-tag">✈️ Amo Viajar apresenta</div>
+          <div class="premio-nome">Santa Rita de Jacutinga</div>
+          <div class="premio-local">Zona da Mata Mineira · MG</div>
+        </div>
+        <div class="premio-data-box">
+          <div class="data-titulo">Data da viagem</div>
+          <div class="data-valor">17 a 19 de julho de 2026</div>
+        </div>
+      </div>
+
+      <div class="premio-info">
+        <h3>O que está incluído:</h3>
+        <ul class="itinerario">
+          <li data-icone="🏨">Hospedagem em Hotel Fazenda cercado pela natureza</li>
+          <li data-icone="🗺️">City Tour pelo centro histórico</li>
+          <li data-icone="💧">Visita à Fazenda das Cachoeiras</li>
+          <li data-icone="⛪">Pôr do sol na Igrejinha do Alto</li>
+          <li data-icone="🧀">Passeio por lojas de queijos, doces e artesanatos</li>
+          <li data-icone="🎵">Happy Hour com música ao vivo + caldos e petiscos</li>
+          <li data-icone="🚙">Passeio de Jeep até a Cachoeira Sô Ito</li>
+          <li data-icone="🥾">Caminhada pelas trilhas históricas da região</li>
+        </ul>
+        <div class="parceiro-selo">
+          🤝 Realização: <strong>Amo Viajar</strong> — agência especializada em experiências únicas
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMO PARTICIPAR -->
+<section class="como" id="como">
+  <div class="container">
+    <p class="secao-label">Participação</p>
+    <h2 class="secao-titulo">Como concorrer</h2>
+    <p class="secao-sub">Em 3 passos simples você está dentro. É gratuito e não tem nenhuma letra miúda.</p>
+
+    <div class="passos">
+      <div class="passo">
+        <div class="passo-num">1</div>
+        <h4>Cadastre-se gratuitamente</h4>
+        <p>Preencha seu nome, WhatsApp, Instagram e cidade para receber seu número da sorte.</p>
+      </div>
+      <div class="passo">
+        <div class="passo-num">2</div>
+        <h4>Valide sua participação no Instagram</h4>
+        <p>Siga @parceriapremiadarj, siga os parceiros oficiais, curta a publicação do sorteio e marque 3 amigos reais nos comentários. Não vale perfil famoso, fake ou comercial.</p>
+      </div>
+      <div class="passo">
+        <div class="passo-num">3</div>
+        <h4>Receba seu número da sorte</h4>
+        <p>Após o cadastro, você será direcionado para o WhatsApp e também verá seus dados na página de confirmação.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FORMULÁRIO DE CADASTRO -->
+<section class="cadastro" id="cadastro">
+  <p class="secao-label" style="color: rgba(255,255,255,0.5);">Participação gratuita</p>
+  <h2 class="secao-titulo">Cadastre-se e concorra</h2>
+  <p class="secao-sub">Sorteio em 15 de julho · Resultado pelo WhatsApp e Instagram</p>
+
+  <div class="form-card">
+    <div id="form-conteudo">
+      <h3>🎯 Quero participar do sorteio</h3>
+      <p>Preencha seus dados abaixo. É gratuito e sem compromisso.</p>
+
+      <div class="campo">
+        <label>Nome completo <span class="obrigatorio">*</span></label>
+        <input type="text" id="nome" placeholder="Como você se chama?" autocomplete="name">
+      </div>
+      <div class="campo">
+        <label>WhatsApp com DDD <span class="obrigatorio">*</span></label>
+        <input type="tel" id="whatsapp" placeholder="(21) 99999-9999" autocomplete="tel">
+      </div>
+      <div class="campo">
+        <label>Instagram <span class="obrigatorio">*</span></label>
+        <input type="text" id="instagram" placeholder="@seuperfil">
+      </div>
+      <div class="campos-linha">
+        <div class="campo">
+          <label>Cidade <span class="obrigatorio">*</span></label>
+          <input type="text" id="cidade" placeholder="Sua cidade" autocomplete="address-level2">
+        </div>
+        <div class="campo">
+          <label>Estado <span class="obrigatorio">*</span></label>
+          <select id="estado" autocomplete="address-level1">
+            <option value="">UF</option>
+            <option>AC</option><option>AL</option><option>AP</option><option>AM</option>
+            <option>BA</option><option>CE</option><option>DF</option><option>ES</option>
+            <option>GO</option><option>MA</option><option>MT</option><option>MS</option>
+            <option>MG</option><option>PA</option><option>PB</option><option>PR</option>
+            <option>PE</option><option>PI</option><option>RJ</option><option>RN</option>
+            <option>RS</option><option>RO</option><option>RR</option><option>SC</option>
+            <option>SP</option><option>SE</option><option>TO</option>
+          </select>
+        </div>
+      </div>
+      <div class="campo">
+        <label>E-mail <span class="opcional">(opcional)</span></label>
+        <input type="email" id="email" placeholder="seu@email.com" autocomplete="email">
+      </div>
+      <div class="campo campo-check">
+        <label class="label-check">
+          <input type="checkbox" id="lgpd">
+          <span>Li e aceito o <a href="regulamento.html" target="_blank">regulamento do sorteio</a> e autorizo o uso dos meus dados para comunicação da Parceria Premiada conforme a LGPD.</span>
+        </label>
+      </div>
+
+      <div id="form-erro" class="form-erro" style="display:none"></div>
+
+      <button class="btn-cadastro" id="btn-cadastro" onclick="cadastrar()">
+        Garantir meu número da sorte 🎉
+      </button>
+      <p class="form-nota">🔒 Seus dados são usados apenas para o sorteio e comunicações da Parceria Premiada. Sem spam.</p>
+    </div>
+  </div>
+</section>
+
+<!-- PARCEIROS -->
+<section class="parceiros">
+  <div class="container">
+    <p class="secao-label">Quem apoia</p>
+    <h2 class="secao-titulo">Parceiros que fazem acontecer</h2>
+    <div class="parceiros-grid">
+      <div class="parceiro-detalhe">
+        <img src="logo_amo_viajar.png" alt="Amo Viajar">
+        <span class="p-nome">Amo Viajar</span>
+        <span class="p-insta">@amoviajar</span>
+        <span class="p-cat">Turismo & Excursões</span>
+      </div>
+      <div class="parceiro-detalhe">
+        <div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#36077A,#F5A623);display:flex;align-items:center;justify-content:center;font-size:24px;">🍺</div>
+        <span class="p-nome">Dose Dupla Bar</span>
+        <span class="p-insta">@dosedupla</span>
+        <span class="p-cat">Bar & Gastronomia</span>
+      </div>
+      <div class="parceiro-detalhe">
+        <div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#36077A,#F5A623);display:flex;align-items:center;justify-content:center;font-size:24px;">🍽️</div>
+        <span class="p-nome">Sabores do Fellini</span>
+        <span class="p-insta">@saboresfellini</span>
+        <span class="p-cat">Restaurante</span>
+      </div>
+    </div>
+    <div style="margin-top: 32px;">
+      <a href="https://api.whatsapp.com/send/?phone=%2B5521970563795&text=Ol%C3%A1%2C+quero+ser+parceiro+da+Parceria+Premiada%21" target="_blank" class="btn-parceiro">
+        Quero ser parceiro →
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- TRANSPARÊNCIA -->
+<section class="transparencia">
+  <div class="container">
+    <p class="secao-label">Transparência do Sorteio</p>
+    <h2 class="secao-titulo">Sorteio justo e público</h2>
+    <p class="secao-sub">O sorteio será realizado com base no resultado da Loteria Federal. Cada participante válido receberá um número da sorte. O número vencedor será definido conforme o critério descrito no regulamento oficial.</p>
+    <div class="trans-cards">
+      <div class="trans-card">
+        <span class="trans-card-icone">🔢</span>
+        Números da sorte individuais
+      </div>
+      <div class="trans-card">
+        <span class="trans-card-icone">🏛️</span>
+        Critério público pela Loteria Federal
+      </div>
+      <div class="trans-card">
+        <span class="trans-card-icone">📣</span>
+        Resultado divulgado no Instagram e WhatsApp
+      </div>
+      <div class="trans-card">
+        <span class="trans-card-icone">📋</span>
+        Regulamento disponível para consulta
+      </div>
+    </div>
+    <a href="regulamento.html" class="btn-principal" style="font-size:14px;padding:14px 28px;">
+      Ver regulamento completo
+    </a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <strong>Parceria Premiada</strong> · Rio de Janeiro – RJ<br>
+  contato@parceriapremiada.app.br · <a href="tel:+5521970563795">(21) 97056-3795</a><br><br>
+  <a href="regulamento.html">📋 Regulamento</a> ·
+  <a href="regulamento.html#privacidade">🔒 Política de Privacidade</a> ·
+  <a href="https://www.instagram.com/parceriapremiadarj" target="_blank">📸 Instagram</a> ·
+  <a href="https://api.whatsapp.com/send/?phone=%2B5521970563795" target="_blank">💬 WhatsApp</a> ·
+  <a href="https://api.whatsapp.com/send/?phone=%2B5521970563795&text=Ol%C3%A1%2C+quero+ser+parceiro+da+Parceria+Premiada%21" target="_blank">🤝 Quero ser parceiro</a><br><br>
+  © 2026 Parceria Premiada · Todos os direitos reservados.<br>
+  <small>Sorteio realizado em 15/07/2026. Resultado divulgado pelo Instagram e WhatsApp.</small>
+</footer>
+
+<script>
+// ── Countdown
+function atualizarCountdown() {
+  const alvo = new Date('2026-07-15T12:00:00-03:00');
+  const diff = alvo - new Date();
+  if (diff <= 0) {
+    document.getElementById('countdown').innerHTML = '<div style="color:var(--dourado);font-family:Syne,sans-serif;font-weight:800;font-size:1.2rem;">⏰ Sorteio encerrado!</div>';
+    return;
+  }
+  const dias  = Math.floor(diff / 86400000);
+  const horas = Math.floor((diff % 86400000) / 3600000);
+  const min   = Math.floor((diff % 3600000) / 60000);
+  const seg   = Math.floor((diff % 60000) / 1000);
+  document.getElementById('cd-dias').textContent  = String(dias).padStart(2,'0');
+  document.getElementById('cd-horas').textContent = String(horas).padStart(2,'0');
+  document.getElementById('cd-min').textContent   = String(min).padStart(2,'0');
+  document.getElementById('cd-seg').textContent   = String(seg).padStart(2,'0');
+}
+atualizarCountdown();
+setInterval(atualizarCountdown, 1000);
+
+// ── Máscara WhatsApp
+document.getElementById('whatsapp').addEventListener('input', function(e) {
+  let v = e.target.value.replace(/\D/g,'').slice(0,11);
+  if (v.length > 7)      v = '(' + v.slice(0,2) + ') ' + v.slice(2,7) + '-' + v.slice(7);
+  else if (v.length > 2) v = '(' + v.slice(0,2) + ') ' + v.slice(2);
+  else if (v.length > 0) v = '(' + v;
+  e.target.value = v;
+});
+
+// ── Instagram: garante que salva sem @
+document.getElementById('instagram').addEventListener('blur', function(e) {
+  let v = e.target.value.trim().replace(/^@/, '');
+  e.target.value = v ? '@' + v : '';
+});
+
+// ── Gerar número da sorte
+function gerarNumero() {
+  const existentes = JSON.parse(localStorage.getItem('pp_cadastros') || '[]');
+  const seq = existentes.length + 1;
+  return 'PP-' + String(seq).padStart(6, '0');
+}
+
+// ── Mostrar erro
+function mostrarErro(msg) {
+  const el = document.getElementById('form-erro');
+  el.textContent = msg;
+  el.style.display = 'block';
+  el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+function limparErro() {
+  document.getElementById('form-erro').style.display = 'none';
+}
+
+// ── Cadastro
+function cadastrar() {
+  limparErro();
+
+  const nome      = document.getElementById('nome').value.trim();
+  const whatsapp  = document.getElementById('whatsapp').value.trim();
+  const instagram = document.getElementById('instagram').value.trim();
+  const cidade    = document.getElementById('cidade').value.trim();
+  const estado    = document.getElementById('estado').value;
+  const email     = document.getElementById('email').value.trim();
+  const lgpd      = document.getElementById('lgpd').checked;
+
+  if (!nome)      return mostrarErro('Por favor, informe seu nome completo.');
+  if (!whatsapp || whatsapp.replace(/\D/g,'').length < 10) return mostrarErro('Por favor, informe um WhatsApp válido com DDD.');
+  if (!instagram) return mostrarErro('Por favor, informe seu Instagram.');
+  if (!cidade)    return mostrarErro('Por favor, informe sua cidade.');
+  if (!estado)    return mostrarErro('Por favor, selecione seu estado.');
+  if (email && !email.includes('@')) return mostrarErro('O e-mail informado não é válido.');
+  if (!lgpd)      return mostrarErro('É necessário aceitar o regulamento para participar.');
+
+  // Loading
+  const btn = document.getElementById('btn-cadastro');
+  btn.textContent = 'Registrando...';
+  btn.disabled = true;
+
+  // Número da sorte
+  const numero = gerarNumero();
+
+  // Salvar localmente
+  const cadastros = JSON.parse(localStorage.getItem('pp_cadastros') || '[]');
+  cadastros.push({ nome, whatsapp, instagram, cidade, estado, email, numero, data: new Date().toISOString() });
+  localStorage.setItem('pp_cadastros', JSON.stringify(cadastros));
+  localStorage.setItem('pp_ultimo', JSON.stringify({ nome, numero, whatsapp }));
+
+  // Redirecionar para confirmação após breve delay (UX)
+  setTimeout(() => {
+    window.location.href = 'confirmacao.html';
+  }, 800);
+}
+</script>
+</body>
+</html>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { getSupabase } from "@/lib/supabase";
 
 type FormState = "idle" | "loading" | "success" | "error";
 
@@ -28,12 +29,17 @@ export default function ListaVipForm() {
     e.preventDefault();
     setState("loading");
     try {
-      const res = await fetch("/api/lista-vip", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (getSupabase() as any).from("lista_vip").insert({
+        nome: form.nome.trim(),
+        whatsapp: form.whatsapp.replace(/\D/g, ""),
+        cidade: form.cidade.trim() || null,
       });
-      if (!res.ok) throw new Error();
+      if (error) throw error;
+      if (typeof window !== "undefined" && window.fbq) {
+        console.log("Meta Lead disparado");
+        window.fbq("track", "Lead");
+      }
       setState("success");
     } catch {
       setState("error");

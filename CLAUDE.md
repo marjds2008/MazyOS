@@ -135,5 +135,7 @@ Quando o usuário pedir skill nova:
 **Estrutura de pastas:**
 - `_memoria/` — contexto do negócio, tom de voz, foco atual
 - `identidade/` — logo e design guide do Amo Viajar
-- `src/` — código-fonte do site/SaaS
-- `public/` — assets públicos
+- `src/` — código-fonte do site principal (amoviajar.app.br)
+- `public/` — assets públicos do site principal
+- `admin/` — painel administrativo (admin.amoviajar.app.br), Next.js separado
+- `projetos/` — projetos paralelos (ex: dose-dupla-hub, lista-vip)

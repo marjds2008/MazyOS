@@ -2,8 +2,8 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { X, Plus, MapPin, Calendar, Trash2, MessageSquare } from "lucide-react";
-import type { Cliente, Participacao, Viagem } from "@/types/database";
+import { X, Plus, MapPin, Calendar, Trash2, MessageSquare, StickyNote, Send } from "lucide-react";
+import type { Cliente, Participacao, Viagem, NotaCliente } from "@/types/database";
 
 const CATEGORIAS: Record<string, string> = {
   serra: "Serra", praia: "Praia", cultura: "Cultura",
@@ -17,13 +17,17 @@ interface Props {
 }
 
 export default function ClienteDetalhe({ cliente, onClose, onEditar }: Props) {
-  const [aba, setAba]                       = useState<"dados" | "historico">("historico");
-  const [participacoes, setParticipacoes]   = useState<Participacao[]>([]);
-  const [viagens, setViagens]               = useState<Pick<Viagem, "id" | "titulo" | "destino" | "categoria">[]>([]);
-  const [loadingHist, setLoadingHist]       = useState(true);
-  const [adicionando, setAdicionando]       = useState(false);
-  const [salvando, setSalvando]             = useState(false);
-  const [nova, setNova]                     = useState({ viagem_id: "", destino: "", data_viagem: "", observacoes: "" });
+  const [aba, setAba]                     = useState<"historico" | "notas" | "dados">("historico");
+  const [participacoes, setParticipacoes] = useState<Participacao[]>([]);
+  const [viagens, setViagens]             = useState<Pick<Viagem, "id" | "titulo" | "destino" | "categoria" | "data_saida">[]>([]);
+  const [notas, setNotas]                 = useState<NotaCliente[]>([]);
+  const [loadingHist, setLoadingHist]     = useState(true);
+  const [loadingNotas, setLoadingNotas]   = useState(true);
+  const [adicionando, setAdicionando]     = useState(false);
+  const [salvando, setSalvando]           = useState(false);
+  const [novaNota, setNovaNota]           = useState("");
+  const [salvandoNota, setSalvandoNota]   = useState(false);
+  const [nova, setNova]                   = useState({ viagem_id: "", destino: "", data_viagem: "", valor: "", observacoes: "" });
 
   const carregarHistorico = useCallback(async () => {
     setLoadingHist(true);
@@ -37,14 +41,29 @@ export default function ClienteDetalhe({ cliente, onClose, onEditar }: Props) {
     setLoadingHist(false);
   }, [cliente.id]);
 
-  useEffect(() => { carregarHistorico(); }, [carregarHistorico]);
+  const carregarNotas = useCallback(async () => {
+    setLoadingNotas(true);
+    const supabase = createClient();
+    const { data } = await supabase
+      .from("notas_cliente")
+      .select("*")
+      .eq("cliente_id", cliente.id)
+      .order("criado_em", { ascending: false });
+    setNotas(data ?? []);
+    setLoadingNotas(false);
+  }, [cliente.id]);
+
+  useEffect(() => {
+    carregarHistorico();
+    carregarNotas();
+  }, [carregarHistorico, carregarNotas]);
 
   useEffect(() => {
     async function carregarViagens() {
       const supabase = createClient();
       const { data } = await supabase
         .from("viagens")
-        .select("id, titulo, destino, categoria")
+        .select("id, titulo, destino, categoria, data_saida")
         .order("data_saida", { ascending: false });
       setViagens(data ?? []);
     }
@@ -61,18 +80,39 @@ export default function ClienteDetalhe({ cliente, onClose, onEditar }: Props) {
       viagem_id:   nova.viagem_id || null,
       destino:     nova.viagem_id ? viagem?.destino : nova.destino.trim() || null,
       data_viagem: nova.data_viagem || null,
+      valor:       nova.valor ? parseFloat(nova.valor.replace(",", ".")) : null,
       observacoes: nova.observacoes.trim() || null,
     });
-    setNova({ viagem_id: "", destino: "", data_viagem: "", observacoes: "" });
+    setNova({ viagem_id: "", destino: "", data_viagem: "", valor: "", observacoes: "" });
     setAdicionando(false);
     setSalvando(false);
     carregarHistorico();
   }
 
-  async function remover(id: string) {
+  async function removerParticipacao(id: string) {
     const supabase = createClient();
     await supabase.from("participacoes").delete().eq("id", id);
     setParticipacoes(p => p.filter(x => x.id !== id));
+  }
+
+  async function salvarNota() {
+    if (!novaNota.trim()) return;
+    setSalvandoNota(true);
+    const supabase = createClient();
+    const { data } = await supabase
+      .from("notas_cliente")
+      .insert({ cliente_id: cliente.id, texto: novaNota.trim() })
+      .select()
+      .single();
+    if (data) setNotas(n => [data, ...n]);
+    setNovaNota("");
+    setSalvandoNota(false);
+  }
+
+  async function removerNota(id: string) {
+    const supabase = createClient();
+    await supabase.from("notas_cliente").delete().eq("id", id);
+    setNotas(n => n.filter(x => x.id !== id));
   }
 
   function fmtData(d?: string) {
@@ -80,10 +120,16 @@ export default function ClienteDetalhe({ cliente, onClose, onEditar }: Props) {
     return new Date(d + "T00:00:00").toLocaleDateString("pt-BR", { month: "short", year: "numeric" });
   }
 
+  function fmtTs(ts: string) {
+    return new Date(ts).toLocaleString("pt-BR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+  }
+
   function waLink() {
     const msg = encodeURIComponent(`Olá ${cliente.nome}! Aqui é a Lisa da Amo Viajar ❤️`);
     return `https://wa.me/${cliente.whatsapp.replace(/\D/g, "")}?text=${msg}`;
   }
+
+  const ltv = participacoes.reduce((sum, p) => sum + (p.valor ?? 0), 0);
 
   const categoriaFav = participacoes.length
     ? Object.entries(
@@ -98,6 +144,7 @@ export default function ClienteDetalhe({ cliente, onClose, onEditar }: Props) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
       <div className="bg-white rounded-xl shadow-xl w-full max-w-xl max-h-[90vh] flex flex-col">
+
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
           <div className="flex items-center gap-3">
@@ -122,12 +169,16 @@ export default function ClienteDetalhe({ cliente, onClose, onEditar }: Props) {
 
         {/* Abas */}
         <div className="flex border-b border-gray-100 shrink-0">
-          {(["historico", "dados"] as const).map(a => (
-            <button key={a} onClick={() => setAba(a)}
+          {([
+            { key: "historico", label: `Histórico (${participacoes.length})` },
+            { key: "notas",     label: `Notas (${notas.length})` },
+            { key: "dados",     label: "Dados" },
+          ] as const).map(({ key, label }) => (
+            <button key={key} onClick={() => setAba(key)}
               className={`px-5 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
-                aba === a ? "border-brand-primary text-brand-primary" : "border-transparent text-gray-500 hover:text-gray-700"
+                aba === key ? "border-brand-primary text-brand-primary" : "border-transparent text-gray-500 hover:text-gray-700"
               }`}>
-              {a === "historico" ? `Histórico (${participacoes.length})` : "Dados"}
+              {label}
             </button>
           ))}
         </div>
@@ -135,28 +186,12 @@ export default function ClienteDetalhe({ cliente, onClose, onEditar }: Props) {
         {/* Conteúdo */}
         <div className="overflow-y-auto flex-1 px-6 py-4">
 
-          {aba === "dados" && (
-            <dl className="space-y-3 text-sm">
-              {[
-                { label: "Cidade", value: cliente.cidade },
-                { label: "Data de nascimento", value: cliente.data_nascimento ? new Date(cliente.data_nascimento + "T00:00:00").toLocaleDateString("pt-BR") : null },
-                { label: "Categoria favorita", value: cliente.categoria_favorita ? CATEGORIAS[cliente.categoria_favorita] : null },
-                { label: "Origem", value: cliente.origem },
-                { label: "Observações", value: cliente.observacoes },
-              ].map(({ label, value }) => value ? (
-                <div key={label} className="flex gap-3">
-                  <dt className="text-gray-400 w-36 shrink-0">{label}</dt>
-                  <dd className="text-gray-800">{value}</dd>
-                </div>
-              ) : null)}
-            </dl>
-          )}
-
+          {/* ── Histórico ── */}
           {aba === "historico" && (
             <div className="space-y-4">
-              {/* Resumo */}
+              {/* Resumo LTV */}
               {participacoes.length > 0 && (
-                <div className="flex gap-4 text-sm">
+                <div className="flex gap-3 text-sm">
                   <div className="card px-4 py-3 text-center flex-1">
                     <div className="text-xl font-bold text-brand-primary">{participacoes.length}</div>
                     <div className="text-xs text-gray-500">viagens</div>
@@ -167,10 +202,18 @@ export default function ClienteDetalhe({ cliente, onClose, onEditar }: Props) {
                       <div className="text-xs text-gray-500">categoria favorita</div>
                     </div>
                   )}
+                  {ltv > 0 && (
+                    <div className="card px-4 py-3 text-center flex-1">
+                      <div className="text-sm font-bold text-green-700">
+                        {ltv.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                      </div>
+                      <div className="text-xs text-gray-500">total gasto</div>
+                    </div>
+                  )}
                 </div>
               )}
 
-              {/* Lista */}
+              {/* Lista de viagens */}
               {loadingHist ? (
                 <div className="py-8 text-center text-gray-400 text-sm">Carregando…</div>
               ) : participacoes.length === 0 && !adicionando ? (
@@ -196,11 +239,17 @@ export default function ClienteDetalhe({ cliente, onClose, onEditar }: Props) {
                                 <Calendar className="w-3 h-3" />{fmtData(p.data_viagem)}
                               </span>
                             )}
+                            {p.valor != null && (
+                              <span className="text-xs font-semibold text-green-700">
+                                {p.valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                              </span>
+                            )}
                           </div>
                           {p.observacoes && <p className="text-xs text-gray-500 mt-1">{p.observacoes}</p>}
                         </div>
                       </div>
-                      <button onClick={() => remover(p.id)} className="p-1 rounded hover:bg-gray-200 text-gray-300 hover:text-red-400 shrink-0">
+                      <button onClick={() => removerParticipacao(p.id)}
+                        className="p-1 rounded hover:bg-gray-200 text-gray-300 hover:text-red-400 shrink-0">
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </li>
@@ -208,12 +257,21 @@ export default function ClienteDetalhe({ cliente, onClose, onEditar }: Props) {
                 </ul>
               )}
 
-              {/* Formulário adicionar */}
+              {/* Formulário adicionar viagem */}
               {adicionando ? (
                 <div className="border border-gray-200 rounded-lg p-4 space-y-3">
                   <div>
                     <label className="label">Viagem cadastrada</label>
-                    <select className="input" value={nova.viagem_id} onChange={e => setNova(n => ({ ...n, viagem_id: e.target.value, destino: "" }))}>
+                    <select className="input" value={nova.viagem_id}
+                      onChange={e => {
+                        const v = viagens.find(x => x.id === e.target.value);
+                        setNova(n => ({
+                          ...n,
+                          viagem_id:   e.target.value,
+                          destino:     "",
+                          data_viagem: v?.data_saida ?? n.data_viagem,
+                        }));
+                      }}>
                       <option value="">Selecionar viagem…</option>
                       {viagens.map(v => <option key={v.id} value={v.id}>{v.titulo} — {v.destino}</option>)}
                     </select>
@@ -221,30 +279,110 @@ export default function ClienteDetalhe({ cliente, onClose, onEditar }: Props) {
                   {!nova.viagem_id && (
                     <div>
                       <label className="label">Ou destino manual</label>
-                      <input className="input" placeholder="ex: Penedo" value={nova.destino} onChange={e => setNova(n => ({ ...n, destino: e.target.value }))} />
+                      <input className="input" placeholder="ex: Penedo" value={nova.destino}
+                        onChange={e => setNova(n => ({ ...n, destino: e.target.value }))} />
                     </div>
                   )}
-                  <div>
-                    <label className="label">Data da viagem</label>
-                    <input className="input" type="date" value={nova.data_viagem} onChange={e => setNova(n => ({ ...n, data_viagem: e.target.value }))} />
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="label">Data da viagem</label>
+                      <input className="input" type="date" value={nova.data_viagem}
+                        onChange={e => setNova(n => ({ ...n, data_viagem: e.target.value }))} />
+                    </div>
+                    <div>
+                      <label className="label">Valor pago (R$)</label>
+                      <input className="input" placeholder="ex: 380,00" value={nova.valor}
+                        onChange={e => setNova(n => ({ ...n, valor: e.target.value }))} />
+                    </div>
                   </div>
                   <div>
                     <label className="label">Observações</label>
-                    <input className="input" placeholder="Opcional…" value={nova.observacoes} onChange={e => setNova(n => ({ ...n, observacoes: e.target.value }))} />
+                    <input className="input" placeholder="Opcional…" value={nova.observacoes}
+                      onChange={e => setNova(n => ({ ...n, observacoes: e.target.value }))} />
                   </div>
                   <div className="flex gap-2 justify-end">
                     <button onClick={() => setAdicionando(false)} className="btn-secondary text-xs px-3 py-1.5">Cancelar</button>
-                    <button onClick={adicionarViagem} disabled={salvando || (!nova.viagem_id && !nova.destino.trim())} className="btn-primary text-xs px-3 py-1.5">
+                    <button onClick={adicionarViagem}
+                      disabled={salvando || (!nova.viagem_id && !nova.destino.trim())}
+                      className="btn-primary text-xs px-3 py-1.5">
                       {salvando ? "Salvando…" : "Registrar"}
                     </button>
                   </div>
                 </div>
               ) : (
-                <button onClick={() => setAdicionando(true)} className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg border-2 border-dashed border-gray-200 text-gray-400 hover:border-brand-primary hover:text-brand-primary transition-colors text-sm">
+                <button onClick={() => setAdicionando(true)}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg border-2 border-dashed border-gray-200 text-gray-400 hover:border-brand-primary hover:text-brand-primary transition-colors text-sm">
                   <Plus className="w-4 h-4" /> Registrar viagem
                 </button>
               )}
             </div>
+          )}
+
+          {/* ── Notas ── */}
+          {aba === "notas" && (
+            <div className="space-y-4">
+              {/* Campo nova nota */}
+              <div className="space-y-2">
+                <textarea
+                  className="input resize-none text-sm"
+                  rows={3}
+                  placeholder="Registre uma interação, combinado, observação… (ex: Ligou pedindo desconto. Vai trazer a filha.)"
+                  value={novaNota}
+                  onChange={e => setNovaNota(e.target.value)}
+                  onKeyDown={e => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) salvarNota(); }}
+                />
+                <div className="flex justify-end">
+                  <button onClick={salvarNota} disabled={salvandoNota || !novaNota.trim()}
+                    className="btn-primary text-xs px-4 py-1.5 flex items-center gap-1.5">
+                    <Send className="w-3.5 h-3.5" />
+                    {salvandoNota ? "Salvando…" : "Salvar nota"}
+                  </button>
+                </div>
+              </div>
+
+              {/* Lista de notas */}
+              {loadingNotas ? (
+                <div className="py-8 text-center text-gray-400 text-sm">Carregando…</div>
+              ) : notas.length === 0 ? (
+                <div className="py-8 text-center text-gray-400 text-sm flex flex-col items-center gap-2">
+                  <StickyNote className="w-8 h-8 opacity-30" />
+                  Nenhuma nota registrada ainda.
+                </div>
+              ) : (
+                <ul className="space-y-2">
+                  {notas.map(n => (
+                    <li key={n.id} className="group flex items-start gap-3 p-3 rounded-lg bg-gray-50">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">{n.texto}</p>
+                        <p className="text-xs text-gray-400 mt-1">{fmtTs(n.criado_em)}</p>
+                      </div>
+                      <button onClick={() => removerNota(n.id)}
+                        className="p-1 rounded hover:bg-gray-200 text-gray-300 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all shrink-0">
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+
+          {/* ── Dados ── */}
+          {aba === "dados" && (
+            <dl className="space-y-3 text-sm">
+              {[
+                { label: "Cidade",             value: cliente.cidade },
+                { label: "Data de nascimento", value: cliente.data_nascimento ? new Date(cliente.data_nascimento + "T00:00:00").toLocaleDateString("pt-BR") : null },
+                { label: "Categoria favorita", value: cliente.categoria_favorita ? CATEGORIAS[cliente.categoria_favorita] : null },
+                { label: "Origem",             value: cliente.origem },
+                { label: "Observações",        value: cliente.observacoes },
+              ].map(({ label, value }) => value ? (
+                <div key={label} className="flex gap-3">
+                  <dt className="text-gray-400 w-36 shrink-0">{label}</dt>
+                  <dd className="text-gray-800">{value}</dd>
+                </div>
+              ) : null)}
+            </dl>
           )}
         </div>
       </div>

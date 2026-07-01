@@ -1,4 +1,7 @@
-import { createClient } from "@/lib/supabase/server";
+"use client";
+
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 
@@ -12,19 +15,48 @@ const statusColor: Record<string, string> = {
   encerrada: "bg-gray-100 text-gray-600",
 };
 
-export default async function ViagensPage() {
-  const supabase = await createClient();
-  const { data: viagens } = await supabase
-    .from("viagens")
-    .select("id, titulo, destino, categoria, data_saida, vagas_disponiveis, vagas_totais, valor, status")
-    .order("criado_em", { ascending: false });
+type Viagem = {
+  id: string;
+  titulo: string;
+  destino: string;
+  categoria: string;
+  data_saida: string | null;
+  vagas_disponiveis: number | null;
+  vagas_totais: number | null;
+  valor: number | null;
+  status: string;
+};
+
+export default function ViagensPage() {
+  const [viagens, setViagens] = useState<Viagem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function load() {
+      setLoading(true);
+      const supabase = createClient();
+      const { data } = await (supabase as any)
+        .from("viagens")
+        .select("id, titulo, destino, categoria, data_saida, vagas_disponiveis, vagas_totais, valor, status")
+        .order("criado_em", { ascending: false });
+      setViagens(data ?? []);
+      setLoading(false);
+    }
+    load();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="py-16 text-center text-gray-400 text-sm">Carregando…</div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Viagens</h1>
-          <p className="text-gray-500 text-sm mt-1">{viagens?.length ?? 0} viagens cadastradas</p>
+          <p className="text-gray-500 text-sm mt-1">{viagens.length} viagens cadastradas</p>
         </div>
         <Link href="/viagens/nova" className="btn-primary">
           <Plus className="w-4 h-4" /> Nova viagem
@@ -32,7 +64,7 @@ export default async function ViagensPage() {
       </div>
 
       <div className="card overflow-hidden">
-        {!viagens?.length ? (
+        {!viagens.length ? (
           <div className="py-16 text-center">
             <p className="text-gray-400 text-sm">Nenhuma viagem cadastrada.</p>
             <Link href="/viagens/nova" className="btn-primary mt-4 inline-flex">
@@ -71,7 +103,7 @@ export default async function ViagensPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <Link href={`/viagens/${v.id}`} className="text-brand-primary text-xs font-medium hover:underline">
+                      <Link href={`/viagens/editar?id=${v.id}`} className="text-brand-primary text-xs font-medium hover:underline">
                         Editar
                       </Link>
                     </td>

@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<!--
+  TODO SECURITY: Esta página admin.html é temporária para homologação.
+  Antes do deploy público, proteger com autenticação ou remover do build público.
+-->
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Parceria Premiada</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --roxo:        #4D0AA4;
+  --roxo-escuro: #36077A;
+  --roxo-claro:  #7B2FD4;
+  --dourado:     #F5A623;
+  --bg:          #F2F0F9;
+  --branco:      #FFFFFF;
+  --borda:       #E5E1F5;
+  --texto:       #1A1030;
+  --cinza:       #6B6585;
+  --cinza-claro: #F8F7FC;
+  --sombra:      0 2px 12px rgba(77,10,164,0.08);
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--texto);
+  min-height: 100vh;
+  font-size: 14px;
+}
+
+/* ── Security banner ─────────────────────────────────────────────────────── */
+.security-banner {
+  background: #92400E;
+  color: #FEF3C7;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  padding: 7px 16px;
+  letter-spacing: 0.01em;
+}
+
+/* ── Header ──────────────────────────────────────────────────────────────── */
+header {
+  background: var(--roxo-escuro);
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.header-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+.header-logo img {
+  height: 34px;
+  width: 34px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+.header-logo span {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 15px;
+  color: #FFFFFF;
+}
+.header-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.5);
+  margin-left: 4px;
+}
+.header-title::before { content: '›'; margin-right: 8px; }
+
+/* ── Layout ──────────────────────────────────────────────────────────────── */
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 28px 24px 48px;
+}
+
+/* ── Stats cards ─────────────────────────────────────────────────────────── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.stat-card {
+  background: var(--branco);
+  border-radius: 14px;
+  padding: 20px 22px;
+  box-shadow: var(--sombra);
+  border: 1px solid var(--borda);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.stat-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--cinza);
+}
+.stat-value {
+  font-family: 'Syne', sans-serif;
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--roxo);
+  line-height: 1;
+}
+.stat-card.pending   .stat-value { color: #92400E; }
+.stat-card.validated .stat-value { color: #065F46; }
+.stat-card.q-error   .stat-value { color: #991B1B; }
+
+/* ── Seção de fila ───────────────────────────────────────────────────────── */
+.section-header {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--cinza);
+  margin: 8px 0 12px;
+}
+
+/* ── Filters bar ─────────────────────────────────────────────────────────── */
+.filters-bar {
+  background: var(--branco);
+  border-radius: 14px;
+  padding: 16px 20px;
+  box-shadow: var(--sombra);
+  border: 1px solid var(--borda);
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.filter-group label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--cinza);
+}
+.filter-group select,
+.filter-group input {
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  color: var(--texto);
+  background: var(--cinza-claro);
+  border: 1.5px solid var(--borda);
+  border-radius: 8px;
+  padding: 9px 12px;
+  outline: none;
+  transition: border-color 0.15s;
+  min-width: 200px;
+}
+.filter-group input { min-width: 280px; }
+.filter-group select:focus,
+.filter-group input:focus { border-color: var(--roxo); }
+
+.filter-spacer { flex: 1; }
+
+.btn-export {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--roxo);
+  background: var(--cinza-claro);
+  border: 1.5px solid var(--borda);
+  border-radius: 8px;
+  padding: 9px 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  transition: all 0.15s;
+  white-space: nowrap;
+  height: 40px;
+}
+.btn-export:hover { background: #EDE8FA; border-color: var(--roxo-claro); }
+.btn-export:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── Table wrapper ───────────────────────────────────────────────────────── */
+.tabela-wrapper {
+  background: var(--branco);
+  border-radius: 14px;
+  box-shadow: var(--sombra);
+  border: 1px solid var(--borda);
+  overflow: hidden;
+}
+
+.tabela-estado {
+  text-align: center;
+  padding: 60px 24px;
+  color: var(--cinza);
+  font-size: 15px;
+}
+.tabela-estado .icone { font-size: 2.5rem; margin-bottom: 12px; }
+
+.tabela-scroll { overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 840px;
+}
+thead th {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--cinza);
+  background: var(--cinza-claro);
+  padding: 11px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--borda);
+  white-space: nowrap;
+}
+tbody tr {
+  border-bottom: 1px solid #F0EEF8;
+  transition: background 0.12s;
+}
+tbody tr:last-child { border-bottom: none; }
+
+.tr-clickable { cursor: pointer; }
+.tr-clickable:hover { background: #FAF8FF; }
+
+tbody td {
+  padding: 12px 16px;
+  vertical-align: middle;
+  color: var(--texto);
+}
+
+.td-numero {
+  font-family: 'Syne', sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--roxo);
+  white-space: nowrap;
+}
+.td-nome { font-weight: 600; max-width: 180px; }
+.td-nome span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.td-secondary { color: var(--cinza); font-size: 13px; }
+.td-local { font-size: 13px; white-space: nowrap; }
+.td-data { font-size: 12px; color: var(--cinza); white-space: nowrap; }
+
+/* ── Status badges ───────────────────────────────────────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: 20px;
+  padding: 4px 10px;
+  white-space: nowrap;
+}
+.badge::before { content: '●'; font-size: 7px; }
+.badge-pending   { background: #FEF3C7; color: #92400E; }
+.badge-validated { background: #D1FAE5; color: #065F46; }
+.badge-winner    { background: #FFF9C4; color: #78530A; border: 1px solid var(--dourado); }
+.badge-cancelled { background: #FEE2E2; color: #991B1B; }
+
+/* ── Action buttons ──────────────────────────────────────────────────────── */
+.acoes {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
+}
+.btn-acao {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  border: none;
+  border-radius: 6px;
+  padding: 5px 10px;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: opacity 0.15s;
+}
+.btn-acao:hover { opacity: 0.8; }
+.btn-wpp    { background: #DCFCE7; color: #166534; }
+.btn-insta  { background: #FCE7F3; color: #86198F; }
+.btn-copiar { background: #EDE9FE; color: #4C1D95; }
+
+/* ── Resultado info ──────────────────────────────────────────────────────── */
+.resultado-info {
+  font-size: 12px;
+  color: var(--cinza);
+  text-align: right;
+  margin-top: 12px;
+}
+
+/* ── Modal ───────────────────────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(26,16,48,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+
+.modal-box {
+  background: var(--branco);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 24px 64px rgba(77,10,164,0.22);
+  transform: translateY(14px);
+  transition: transform 0.2s;
+}
+.modal-overlay.open .modal-box { transform: translateY(0); }
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 22px 22px 0;
+  gap: 12px;
+}
+.modal-titulo {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--texto);
+  line-height: 1.2;
+}
+.modal-sub {
+  font-size: 13px;
+  color: var(--cinza);
+  margin-top: 4px;
+}
+.modal-close {
+  background: var(--cinza-claro);
+  border: none;
+  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  font-size: 20px;
+  line-height: 1;
+  color: var(--cinza);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.modal-close:hover { background: #EDE8FA; color: var(--roxo); }
+
+.modal-body { padding: 18px 22px 26px; }
+
+.modal-loading {
+  text-align: center;
+  padding: 40px 0;
+  color: var(--cinza);
+  font-size: 14px;
+}
+
+/* Barra de progresso */
+.prog-section { margin-bottom: 20px; }
+.prog-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.prog-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--cinza);
+}
+.prog-pct {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--roxo);
+  font-family: 'Syne', sans-serif;
+}
+.prog-bar {
+  background: #E5E1F5;
+  border-radius: 6px;
+  height: 10px;
+  overflow: hidden;
+}
+.prog-fill {
+  background: linear-gradient(90deg, var(--roxo), var(--roxo-claro));
+  height: 100%;
+  border-radius: 6px;
+  transition: width 0.55s ease;
+  min-width: 4px;
+}
+.prog-desc {
+  font-size: 12px;
+  color: var(--cinza);
+  margin-top: 6px;
+}
+
+/* Tasks list */
+.tasks-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.task-item {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 11px 13px;
+  border-radius: 10px;
+  background: var(--cinza-claro);
+  border: 1.5px solid transparent;
+}
+.task-item.completed { background: #F0FDF4; border-color: #BBF7D0; }
+.task-item.rejected  { background: #FEF2F2; border-color: #FECACA; }
+
+.task-icon { font-size: 17px; flex-shrink: 0; }
+.task-info { flex: 1; min-width: 0; }
+.task-name { font-size: 13px; font-weight: 600; color: var(--texto); }
+.task-detail { font-size: 11px; color: var(--cinza); margin-top: 2px; }
+.task-badge {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+.task-badge.completed { background: #DCFCE7; color: #166534; }
+.task-badge.pending   { background: #FEF3C7; color: #92400E; }
+.task-badge.rejected  { background: #FEE2E2; color: #991B1B; }
+
+/* ── Toast ───────────────────────────────────────────────────────────────── */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: #1A1030;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 10px 18px;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: all 0.2s;
+  pointer-events: none;
+  z-index: 9999;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+
+/* ── Responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .filter-group input { min-width: 180px; }
+  .filter-group select { min-width: 160px; }
+}
+@media (max-width: 600px) {
+  .container { padding: 20px 16px 40px; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .stat-value { font-size: 1.6rem; }
+  .filters-bar { gap: 12px; }
+  .filter-group input,
+  .filter-group select { min-width: 100%; }
+  .filter-spacer { display: none; }
+  .btn-export { width: 100%; justify-content: center; }
+  .modal-box { max-height: 95vh; }
+  .modal-header { padding: 18px 16px 0; }
+  .modal-body { padding: 16px 16px 22px; }
+}
+</style>
+</head>
+<body>
+
+<div class="security-banner">
+  ⚠️ Área administrativa sem autenticação — acesso temporário para homologação. Não expor publicamente.
+</div>
+
+<header>
+  <a href="campaign.html" class="header-logo">
+    <img src="logo.png" alt="Parceria Premiada">
+    <span>Parceria Premiada</span>
+  </a>
+  <span class="header-title">Painel Admin</span>
+</header>
+
+<div class="container">
+
+  <!-- Cards de estatísticas -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <span class="stat-label">Participantes</span>
+      <span class="stat-value" id="stat-total">—</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-label">Números emitidos</span>
+      <span class="stat-value" id="stat-numeros">—</span>
+    </div>
+    <div class="stat-card pending">
+      <span class="stat-label">Pendentes</span>
+      <span class="stat-value" id="stat-pendentes">—</span>
+    </div>
+    <div class="stat-card validated">
+      <span class="stat-label">Validados</span>
+      <span class="stat-value" id="stat-validados">—</span>
+    </div>
+  </div>
+
+  <!-- Fila de Automações -->
+  <p class="section-header">Fila de Automações</p>
+  <div class="stats-grid" style="margin-bottom:24px">
+    <div class="stat-card">
+      <span class="stat-label">Pendentes</span>
+      <span class="stat-value" id="q-pending" style="color:#92400E">—</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-label">Processando</span>
+      <span class="stat-value" id="q-processing" style="color:#1E40AF">—</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-label">Concluídas</span>
+      <span class="stat-value" id="q-done" style="color:#065F46">—</span>
+    </div>
+    <div class="stat-card q-error">
+      <span class="stat-label">Erro</span>
+      <span class="stat-value" id="q-failed">—</span>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filters-bar">
+    <div class="filter-group">
+      <label for="select-campanha">Campanha</label>
+      <select id="select-campanha" onchange="onCampanhaChange()">
+        <option value="santa-rita-jacutinga">Santa Rita de Jacutinga</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label for="busca">Buscar</label>
+      <input type="text" id="busca" placeholder="Nome, WhatsApp ou Instagram..." oninput="onBuscaChange()">
+    </div>
+    <span class="filter-spacer"></span>
+    <button class="btn-export" id="btn-export" onclick="exportar()">
+      📥 Exportar CSV
+    </button>
+  </div>
+
+  <!-- Tabela -->
+  <div class="tabela-wrapper">
+    <div class="tabela-estado" id="estado-loading">
+      <div class="icone">⏳</div>
+      <div>Carregando participantes...</div>
+    </div>
+    <div class="tabela-estado" id="estado-vazio" style="display:none">
+      <div class="icone">🔍</div>
+      <div id="estado-vazio-msg">Nenhum participante encontrado.</div>
+    </div>
+    <div class="tabela-scroll" id="tabela-container" style="display:none">
+      <table>
+        <thead>
+          <tr>
+            <th>Nº Sorte</th>
+            <th>Nome</th>
+            <th>WhatsApp</th>
+            <th>Instagram</th>
+            <th>Cidade/UF</th>
+            <th>Status</th>
+            <th>Cadastro</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="resultado-info" id="resultado-info"></div>
+
+</div>
+
+<!-- Modal de progresso do participante -->
+<div class="modal-overlay" id="modal">
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modal-nome">
+    <div class="modal-header">
+      <div>
+        <div class="modal-titulo" id="modal-nome">—</div>
+        <div class="modal-sub" id="modal-sub">—</div>
+      </div>
+      <button class="modal-close" onclick="fecharModal()" title="Fechar">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-loading" id="modal-loading">⏳ Carregando progresso...</div>
+      <div id="modal-conteudo" style="display:none">
+
+        <!-- Barra de progresso -->
+        <div class="prog-section">
+          <div class="prog-meta">
+            <span class="prog-label">Progresso das tarefas</span>
+            <span class="prog-pct" id="modal-prog-pct">0%</span>
+          </div>
+          <div class="prog-bar">
+            <div class="prog-fill" id="modal-prog-fill" style="width:0%"></div>
+          </div>
+          <p class="prog-desc" id="modal-prog-desc"></p>
+        </div>
+
+        <!-- Lista de tarefas -->
+        <ul class="tasks-list" id="modal-tasks"></ul>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/services/campaignService.js"></script>
+<script src="js/services/luckyNumberService.js"></script>
+<script src="js/services/adminService.js"></script>
+<script src="js/services/automationService.js"></script>
+<script src="js/campaigns.js"></script>
+<script>
+// ── Estado ───────────────────────────────────────────────────────────────────
+let campanhaAtual = 'santa-rita-jacutinga';
+let searchTimeout = null;
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+  await carregarCampanhas();
+  await carregarTudo();
+  setupTabelaClick();
+});
+
+// ── Carrega select de campanhas ───────────────────────────────────────────────
+async function carregarCampanhas() {
+  const select = document.getElementById('select-campanha');
+  try {
+    let campaigns = [];
+    if (isSupabaseConfigured()) campaigns = await campaignService.getAll();
+    if (!campaigns || !campaigns.length) {
+      campaigns = (typeof PP_CAMPAIGNS !== 'undefined') ? PP_CAMPAIGNS : [];
+    }
+    if (campaigns && campaigns.length) {
+      select.innerHTML = campaigns.map(c =>
+        `<option value="${esc(c.slug)}">${esc(c.title || c.slug)}</option>`
+      ).join('');
+    }
+  } catch (e) {
+    console.warn('[Admin] Erro ao carregar campanhas:', e.message);
+  }
+  const urlSlug = new URLSearchParams(window.location.search).get('campaign');
+  if (urlSlug) { select.value = urlSlug; campanhaAtual = urlSlug; }
+  else { campanhaAtual = select.value; }
+}
+
+// ── Carrega stats + participantes ─────────────────────────────────────────────
+async function carregarTudo() {
+  campanhaAtual = document.getElementById('select-campanha').value;
+  atualizarUrl(campanhaAtual);
+  await Promise.all([carregarStats(), carregarParticipantes(), carregarQueueStats()]);
+}
+
+// ── Stats cards ───────────────────────────────────────────────────────────────
+async function carregarStats() {
+  setStats({ total_participants: '—', total_numbers: '—', pending: '—', validated: '—' });
+  if (!isSupabaseConfigured()) return;
+  try {
+    const s = await adminService.getCampaignStats(campanhaAtual);
+    setStats(s);
+  } catch (e) {
+    console.warn('[Admin] Erro stats:', e.message);
+  }
+}
+
+function setStats(s) {
+  document.getElementById('stat-total').textContent     = s.total_participants ?? '—';
+  document.getElementById('stat-numeros').textContent   = s.total_numbers      ?? '—';
+  document.getElementById('stat-pendentes').textContent = s.pending            ?? '—';
+  document.getElementById('stat-validados').textContent = s.validated          ?? '—';
+}
+
+// ── Queue stats ───────────────────────────────────────────────────────────────
+async function carregarQueueStats() {
+  if (!isSupabaseConfigured()) return;
+  try {
+    const s = await automationService.getQueueStats(campanhaAtual);
+    document.getElementById('q-pending').textContent    = s.pending    ?? '—';
+    document.getElementById('q-processing').textContent = s.processing ?? '—';
+    document.getElementById('q-done').textContent       = s.done       ?? '—';
+    document.getElementById('q-failed').textContent     = s.failed     ?? '—';
+  } catch (e) {
+    console.warn('[Admin] Erro queue stats:', e.message);
+  }
+}
+
+// ── Tabela de participantes ───────────────────────────────────────────────────
+async function carregarParticipantes() {
+  const query = document.getElementById('busca').value.trim();
+  mostrarEstado('loading');
+  if (!isSupabaseConfigured()) {
+    mostrarEstado('vazio', 'Supabase não configurado. Configure js/config.js com as credenciais.');
+    return;
+  }
+  try {
+    const lista = await adminService.searchParticipants(campanhaAtual, query);
+    renderTabela(lista, query);
+  } catch (e) {
+    console.error('[Admin] Erro ao carregar participantes:', e);
+    mostrarEstado('vazio', 'Erro ao carregar: ' + e.message);
+  }
+}
+
+function renderTabela(lista, query) {
+  if (!lista || !lista.length) {
+    const msg = query ? `Nenhum resultado para "${query}".` : 'Nenhum participante cadastrado ainda.';
+    mostrarEstado('vazio', msg);
+    document.getElementById('resultado-info').textContent = '';
+    return;
+  }
+  document.getElementById('tbody').innerHTML = lista.map(p => buildRow(p)).join('');
+  mostrarEstado('tabela');
+  const n   = lista.length;
+  const info = query
+    ? `Exibindo ${n} resultado${n !== 1 ? 's' : ''} para "${query}"`
+    : `${n} participante${n !== 1 ? 's' : ''} cadastrado${n !== 1 ? 's' : ''}`;
+  document.getElementById('resultado-info').textContent = info;
+}
+
+function buildRow(p) {
+  const numero  = p.lucky_number ? luckyNumberService.format(p.lucky_number) : '—';
+  const nome    = esc(p.participant_name || '—');
+  const wppFmt  = p.whatsapp ? adminService._formatWhatsApp(p.whatsapp) : '—';
+  const insta   = p.instagram ? '@' + esc(p.instagram) : '—';
+  const local   = [p.city, p.state].filter(Boolean).join('/') || '—';
+  const badge   = buildBadge(p.participant_status);
+  const data    = p.created_at ? formatData(p.created_at) : '—';
+  const wppLink = p.whatsapp  ? adminService._wppLink(p.whatsapp)    : '#';
+  const igLink  = p.instagram ? adminService._instaLink(p.instagram) : '#';
+  const numRaw  = p.lucky_number ? luckyNumberService.format(p.lucky_number) : '';
+  const pid     = esc(p.participant_id || '');
+
+  return `<tr class="tr-clickable" data-pid="${pid}">
+    <td class="td-numero">${esc(numero)}</td>
+    <td class="td-nome"><span title="${nome}">${nome}</span></td>
+    <td class="td-secondary">${esc(wppFmt)}</td>
+    <td class="td-secondary">${esc(insta)}</td>
+    <td class="td-local">${esc(local)}</td>
+    <td>${badge}</td>
+    <td class="td-data">${data}</td>
+    <td>
+      <div class="acoes">
+        ${p.whatsapp   ? `<a href="${esc(wppLink)}" target="_blank" class="btn-acao btn-wpp">💬 WPP</a>` : ''}
+        ${p.instagram  ? `<a href="${esc(igLink)}"  target="_blank" class="btn-acao btn-insta">📸 IG</a>` : ''}
+        ${numRaw       ? `<button class="btn-acao btn-copiar" onclick="copiarNumero('${esc(numRaw)}')">📋 Copiar</button>` : ''}
+      </div>
+    </td>
+  </tr>`;
+}
+
+function buildBadge(status) {
+  const cls   = { pending: 'badge-pending', validated: 'badge-validated', winner: 'badge-winner', cancelled: 'badge-cancelled' }[status] || 'badge-pending';
+  const label = adminService._formatStatus(status);
+  return `<span class="badge ${cls}">${esc(label)}</span>`;
+}
+
+// ── Event delegation: clique na linha abre modal ──────────────────────────────
+function setupTabelaClick() {
+  document.getElementById('tbody').addEventListener('click', function(e) {
+    if (e.target.closest('.acoes')) return; // não abre modal ao clicar nos botões
+    const tr = e.target.closest('tr[data-pid]');
+    if (tr && tr.dataset.pid) abrirModal(tr.dataset.pid);
+  });
+}
+
+// ── Modal de progresso ────────────────────────────────────────────────────────
+async function abrirModal(participantId) {
+  const overlay = document.getElementById('modal');
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+
+  // Reset
+  document.getElementById('modal-nome').textContent     = '—';
+  document.getElementById('modal-sub').textContent      = '—';
+  document.getElementById('modal-loading').style.display = '';
+  document.getElementById('modal-loading').textContent  = '⏳ Carregando progresso...';
+  document.getElementById('modal-conteudo').style.display = 'none';
+
+  try {
+    const prog = await adminService.getParticipantProgress(participantId);
+    renderModal(prog);
+  } catch (e) {
+    document.getElementById('modal-loading').textContent = '❌ Erro ao carregar: ' + e.message;
+  }
+}
+
+function fecharModal() {
+  document.getElementById('modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// Fechar ao clicar no overlay (fora do box)
+document.getElementById('modal').addEventListener('click', function(e) {
+  if (e.target === this) fecharModal();
+});
+
+// Fechar com Escape
+document.addEventListener('keydown', e => { if (e.key === 'Escape') fecharModal(); });
+
+function renderModal(prog) {
+  if (!prog || prog.error) {
+    document.getElementById('modal-loading').textContent = prog ? prog.error : 'Erro desconhecido.';
+    return;
+  }
+
+  document.getElementById('modal-nome').textContent = prog.name || '—';
+  const numStr = prog.lucky_number ? luckyNumberService.format(prog.lucky_number) : 'sem número';
+  document.getElementById('modal-sub').textContent  = `${numStr} · ${prog.campaign_title || prog.campaign_slug || '—'}`;
+
+  const pct = prog.progress_percent || 0;
+  document.getElementById('modal-prog-pct').textContent  = pct + '%';
+  document.getElementById('modal-prog-fill').style.width = pct + '%';
+
+  const total     = prog.tasks_total     || 0;
+  const concluida = prog.tasks_completed || 0;
+  document.getElementById('modal-prog-desc').textContent =
+    `${concluida} de ${total} tarefa${total !== 1 ? 's' : ''} concluída${concluida !== 1 ? 's' : ''}`;
+
+  const tasks = Array.isArray(prog.tasks) ? prog.tasks : [];
+  const ul    = document.getElementById('modal-tasks');
+  ul.innerHTML = tasks.length
+    ? tasks.map(t => buildTaskItem(t)).join('')
+    : '<li style="color:var(--cinza);font-size:13px;text-align:center;padding:20px">Nenhuma tarefa configurada.</li>';
+
+  document.getElementById('modal-loading').style.display   = 'none';
+  document.getElementById('modal-conteudo').style.display  = '';
+}
+
+function buildTaskItem(t) {
+  const icons   = { completed: '✅', rejected: '❌', pending: '🔘' };
+  const icon    = icons[t.status] || '🔘';
+  const cls     = t.status === 'completed' ? 'completed' : t.status === 'rejected' ? 'rejected' : '';
+  const labels  = { completed: 'Concluído', rejected: 'Rejeitado', pending: 'Pendente' };
+  const badgeLbl = labels[t.status] || t.status;
+  const rewardHint = t.reward_numbers > 0 ? ` · +${t.reward_numbers} número${t.reward_numbers > 1 ? 's' : ''}` : '';
+  const detalhe = t.status === 'completed' && t.completed_at
+    ? 'em ' + formatData(t.completed_at)
+    : (t.description || '');
+
+  return `<li class="task-item ${cls}">
+    <span class="task-icon">${icon}</span>
+    <div class="task-info">
+      <div class="task-name">${esc(t.name)}${!t.required ? ' <span style="font-size:11px;opacity:.55">(opcional)</span>' : ''}</div>
+      ${detalhe || rewardHint ? `<div class="task-detail">${esc(detalhe)}${esc(rewardHint)}</div>` : ''}
+    </div>
+    <span class="task-badge ${t.status}">${esc(badgeLbl)}</span>
+  </li>`;
+}
+
+// ── Exportar CSV ──────────────────────────────────────────────────────────────
+async function exportar() {
+  const btn = document.getElementById('btn-export');
+  btn.disabled     = true;
+  btn.textContent  = '⏳ Exportando...';
+  try {
+    await adminService.exportParticipantsCsv(campanhaAtual);
+    showToast('✅ CSV exportado com sucesso!');
+  } catch (e) {
+    showToast('❌ Erro ao exportar: ' + e.message);
+  } finally {
+    btn.disabled    = false;
+    btn.innerHTML   = '📥 Exportar CSV';
+  }
+}
+
+// ── Copiar número ─────────────────────────────────────────────────────────────
+function copiarNumero(numero) {
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(numero).then(() => showToast('📋 Número copiado: ' + numero));
+  } else {
+    const el = document.createElement('textarea');
+    el.value = numero;
+    document.body.appendChild(el);
+    el.select();
+    document.execCommand('copy');
+    document.body.removeChild(el);
+    showToast('📋 Número copiado: ' + numero);
+  }
+}
+
+// ── Eventos ───────────────────────────────────────────────────────────────────
+function onCampanhaChange() {
+  document.getElementById('busca').value = '';
+  carregarTudo();
+}
+
+function onBuscaChange() {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => carregarParticipantes(), 350);
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function mostrarEstado(estado, mensagem) {
+  document.getElementById('estado-loading').style.display   = estado === 'loading' ? '' : 'none';
+  document.getElementById('estado-vazio').style.display     = estado === 'vazio'   ? '' : 'none';
+  document.getElementById('tabela-container').style.display = estado === 'tabela'  ? '' : 'none';
+  if (mensagem) document.getElementById('estado-vazio-msg').textContent = mensagem;
+}
+
+function formatData(iso) {
+  const d   = new Date(iso);
+  const dia  = String(d.getDate()).padStart(2, '0');
+  const mes  = String(d.getMonth() + 1).padStart(2, '0');
+  const hora = String(d.getHours()).padStart(2, '0');
+  const min  = String(d.getMinutes()).padStart(2, '0');
+  return `${dia}/${mes} ${hora}:${min}`;
+}
+
+function esc(str) {
+  if (str == null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function atualizarUrl(slug) {
+  const url = new URL(window.location.href);
+  url.searchParams.set('campaign', slug);
+  window.history.replaceState({}, '', url.toString());
+}
+
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+</script>
+</body>
+</html>

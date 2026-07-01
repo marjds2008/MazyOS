@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cadastro Confirmado — Parceria Premiada</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --roxo: #4D0AA4; --roxo-escuro: #36077A; --roxo-claro: #7B2FD4;
+    --dourado: #F5A623; --dourado-claro: #FFD07A;
+    --verde: #1DB954; --branco: #FFFFFF;
+    --cinza-claro: #F7F4FF; --cinza-texto: #4A4560; --texto: #1A1030;
+  }
+  body {
+    font-family: 'Inter', sans-serif; background: var(--cinza-claro);
+    color: var(--texto); min-height: 100vh; display: flex; flex-direction: column;
+  }
+  header {
+    background: rgba(77,10,164,0.97); padding: 16px 24px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  header img { height: 36px; width: 36px; border-radius: 8px; object-fit: cover; }
+  header span { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 15px; color: var(--branco); }
+  main {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; padding: 40px 20px;
+  }
+  .card {
+    background: var(--branco); border-radius: 24px; padding: 48px 40px;
+    max-width: 560px; width: 100%;
+    box-shadow: 0 8px 40px rgba(77,10,164,0.1); text-align: center;
+  }
+  .icone { font-size: 3.5rem; margin-bottom: 16px; }
+  h1 {
+    font-family: 'Syne', sans-serif; font-weight: 800;
+    font-size: 1.8rem; color: var(--texto); margin-bottom: 8px;
+  }
+  .numero-sorte {
+    background: linear-gradient(135deg, var(--roxo), var(--roxo-claro));
+    color: var(--branco); border-radius: 14px; padding: 20px 32px;
+    margin: 24px 0; display: inline-block;
+  }
+  .numero-sorte .label {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.12em;
+    text-transform: uppercase; color: rgba(255,255,255,0.65); margin-bottom: 4px;
+  }
+  .numero-sorte .numero {
+    font-family: 'Syne', sans-serif; font-weight: 800;
+    font-size: 2rem; color: var(--dourado); letter-spacing: 0.05em;
+  }
+  .instrucoes {
+    background: var(--cinza-claro); border-radius: 14px;
+    padding: 20px 24px; margin: 24px 0; text-align: left;
+  }
+  .instrucoes h3 {
+    font-family: 'Syne', sans-serif; font-weight: 700;
+    font-size: 1rem; color: var(--texto); margin-bottom: 14px;
+  }
+  .instrucoes ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .instrucoes li {
+    display: flex; align-items: flex-start; gap: 10px;
+    font-size: 14px; color: var(--cinza-texto); line-height: 1.5;
+  }
+  .instrucoes li::before { content: attr(data-icone); font-size: 16px; flex-shrink: 0; }
+  .btns { display: flex; flex-direction: column; gap: 12px; margin-top: 24px; }
+  .btn-wpp {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    background: #25D366; color: var(--branco); font-weight: 700;
+    font-size: 15px; padding: 15px; border-radius: 50px;
+    text-decoration: none; transition: background 0.2s;
+  }
+  .btn-wpp:hover { background: #1ebe5a; }
+  .btn-insta {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    background: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045);
+    color: var(--branco); font-weight: 600; font-size: 14px;
+    padding: 13px; border-radius: 50px; text-decoration: none;
+  }
+  .btn-reg {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    background: transparent; color: var(--roxo); font-weight: 600;
+    font-size: 14px; padding: 13px; border-radius: 50px;
+    text-decoration: none; border: 1.5px solid #EDE8FA; transition: background 0.2s;
+  }
+  .btn-reg:hover { background: var(--cinza-claro); }
+  footer { text-align: center; padding: 20px; font-size: 12px; color: var(--cinza-texto); }
+  @media (max-width: 480px) { .card { padding: 32px 20px; } h1 { font-size: 1.4rem; } }
+</style>
+</head>
+<body>
+<header>
+  <img src="logo.png" alt="Parceria Premiada">
+  <span>Parceria Premiada</span>
+</header>
+
+<main>
+  <div class="card">
+    <div class="icone">🎉</div>
+    <h1>Cadastro realizado com sucesso!</h1>
+    <p id="saudacao" style="color:var(--cinza-texto);margin-top:8px;font-size:15px;"></p>
+
+    <div class="numero-sorte">
+      <div class="label">Seu número da sorte provisório</div>
+      <div class="numero" id="numero-display">PP-000001</div>
+    </div>
+
+    <div class="instrucoes">
+      <h3>Agora valide sua participação no Instagram:</h3>
+      <ul>
+        <li data-icone="✅">Siga <strong id="insta-handle">@parceriapremiadarj</strong> no Instagram</li>
+        <li data-icone="✅">Siga os parceiros oficiais do sorteio</li>
+        <li data-icone="❤️">Curta a publicação oficial do sorteio</li>
+        <li data-icone="👥">Marque 3 amigos reais nos comentários<br><small style="color:#B0A8CC;">Não vale perfil famoso, fake ou comercial</small></li>
+      </ul>
+    </div>
+
+    <div class="btns">
+      <a id="btn-wpp" href="#" class="btn-wpp" target="_blank">
+        💬 Abrir WhatsApp para confirmar
+      </a>
+      <a id="btn-insta" href="https://www.instagram.com/parceriapremiadarj" target="_blank" class="btn-insta">
+        📸 Ir para o Instagram
+      </a>
+      <a id="btn-reg" href="regulamento.html" class="btn-reg">
+        📋 Ver regulamento
+      </a>
+    </div>
+  </div>
+</main>
+
+<footer>
+  © 2026 Parceria Premiada · <a id="footer-reg" href="regulamento.html" style="color:var(--roxo);">Regulamento</a>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/services/participantService.js"></script>
+<script src="js/services/luckyNumberService.js"></script>
+<script src="js/campaigns.js"></script>
+<script>
+  // ── Lê params da URL ──────────────────────────────────────────────────────
+  const params        = new URLSearchParams(window.location.search);
+  const slugParam     = params.get('campaign');
+  const numberParam   = params.get('number');
+  const participantId = params.get('participant_id');
+
+  // Campanha local (campaigns.js) para links e Instagram handle
+  const campaign = slugParam ? getCampaign(slugParam) : getDefaultCampaign();
+
+  // ── Preencher links de campanha imediatamente (sem esperar Supabase) ──────
+  if (campaign) {
+    document.getElementById('insta-handle').textContent = campaign.instagramHandle;
+    document.getElementById('btn-insta').href           = campaign.instagramUrl;
+    document.getElementById('btn-reg').href             = `regulamento.html?campaign=${campaign.slug}`;
+    document.getElementById('footer-reg').href          = `regulamento.html?campaign=${campaign.slug}`;
+  }
+
+  // ── Preencher número provisório da URL (atualizado após fetch Supabase) ───
+  const dadosLocal   = JSON.parse(localStorage.getItem('pp_ultimo') || '{}');
+  const numeroUrl    = numberParam
+    ? luckyNumberService.format(numberParam)
+    : (dadosLocal.numero || 'PP-000001');
+
+  document.getElementById('numero-display').textContent = numeroUrl;
+
+  const nomeLocal = dadosLocal.nome || '';
+  if (nomeLocal) {
+    document.getElementById('saudacao').textContent = nomeLocal.split(' ')[0] + ', você está concorrendo!';
+  }
+
+  // ── Botão WhatsApp provisório ─────────────────────────────────────────────
+  function atualizarBotaoWpp(nome, numero, whatsappNumber) {
+    const wppNum = whatsappNumber || (campaign && campaign.whatsappNumber) || '+5521970563795';
+    const msg = encodeURIComponent(
+      `Olá! Acabei de me cadastrar no sorteio da Parceria Premiada. ` +
+      `Meu nome é ${nome} e meu número da sorte é ${numero}. Quero confirmar minha participação!`
+    );
+    document.getElementById('btn-wpp').href = `https://api.whatsapp.com/send/?phone=${encodeURIComponent(wppNum)}&text=${msg}`;
+  }
+
+  atualizarBotaoWpp(nomeLocal, numeroUrl, campaign && campaign.whatsappNumber);
+
+  // ── Buscar dados confirmados no Supabase (se participant_id disponível) ───
+  if (participantId && isSupabaseConfigured()) {
+    participantService.getConfirmation(participantId).then(dados => {
+      if (!dados) return; // se falhar, mantém dados do localStorage
+
+      const primeiroNome = dados.name ? dados.name.split(' ')[0] : '';
+      const numeroFormatado = luckyNumberService.format(dados.lucky_number);
+
+      // Atualizar nome
+      if (primeiroNome) {
+        document.getElementById('saudacao').textContent = primeiroNome + ', você está concorrendo!';
+      }
+
+      // Atualizar número da sorte (dado confirmado do banco)
+      document.getElementById('numero-display').textContent = numeroFormatado;
+
+      // Atualizar botão WhatsApp com número confirmado
+      atualizarBotaoWpp(dados.name, numeroFormatado, dados.whatsapp_number);
+
+      // Atualizar handle do Instagram se vier do banco
+      if (dados.instagram_url) {
+        document.getElementById('btn-insta').href = dados.instagram_url;
+      }
+    }).catch(err => {
+      console.warn('[PP] Confirmação Supabase falhou, usando localStorage:', err.message);
+    });
+  }
+</script>
+</body>
+</html>
