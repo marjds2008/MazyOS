@@ -82,7 +82,6 @@ DECLARE
   L     INTEGER;
   R     INTEGER;
   f     INTEGER;
-  r     INTEGER;
 BEGIN
   key := digest('draw-engine:v1:' || p_seed, 'sha256');
   x   := (p_sequence - 1) % 131072;
