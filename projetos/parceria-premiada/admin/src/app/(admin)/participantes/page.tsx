@@ -263,7 +263,7 @@ export default function ParticipantesPage() {
                           PP-{fmt}
                         </span>
                         {p.display_hash && (
-                          <Shield className="w-3 h-3 text-green-500 shrink-0" title="Hash verificado" />
+                          <Shield className="w-3 h-3 text-green-500 shrink-0" />
                         )}
                       </div>
                     ) : (
