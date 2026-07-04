@@ -1,0 +1,338 @@
+{
+  "name": "PP — participant.created → WhatsApp (Draw Engine v2)",
+  "active": false,
+  "meta": {
+    "description": "Consome eventos participant.created e envia WhatsApp de confirmação com número da sorte do Draw Engine (display_number). Fallback legado para lucky_number. Versão 2.0.",
+    "instanceId": "parceria-premiada",
+    "drawEngineVersion": "2.0"
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "last",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "nodes": [
+    {
+      "id": "node-01-schedule",
+      "name": "⏱ Cron 1 Minuto",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [0, 300],
+      "parameters": {
+        "rule": {
+          "interval": [
+            { "field": "minutes", "minutesInterval": 1 }
+          ]
+        }
+      }
+    },
+    {
+      "id": "node-02-get-pending",
+      "name": "📥 Buscar Eventos Pendentes",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [220, 300],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.ADMIN_API_BASE_URL }}/api/automation/pending",
+        "authentication": "none",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "limit", "value": "20" }
+          ]
+        },
+        "options": {}
+      },
+      "continueOnFail": false
+    },
+    {
+      "id": "node-03-if-events",
+      "name": "🔍 Há Eventos Pendentes?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [440, 300],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "cond-01",
+              "leftValue": "={{ $json.count }}",
+              "rightValue": 0,
+              "operator": { "type": "number", "operation": "gt" }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "node-04-extract",
+      "name": "📦 Extrair Eventos",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [660, 220],
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\nconst events = response.events || [];\nif (events.length === 0) return [];\nreturn events.map(event => ({ json: event }));"
+      }
+    },
+    {
+      "id": "node-05-split",
+      "name": "🔄 Loop por Evento",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [880, 220],
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      }
+    },
+    {
+      "id": "node-06-mark-processing",
+      "name": "⚙️ Marcar como Processing",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1100, 220],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.ADMIN_API_BASE_URL }}/api/automation/update",
+        "authentication": "none",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "string",
+        "body": "={{ JSON.stringify({ queue_id: $json.queue_id, status: 'processing' }) }}",
+        "options": {}
+      },
+      "continueOnFail": true
+    },
+    {
+      "id": "node-07-normalize",
+      "name": "🛠️ Normalizar Dados e Montar Mensagem",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1320, 220],
+      "parameters": {
+        "jsCode": "const event   = $('Loop por Evento').first().json;\nconst payload = event.payload || {};\n\n// ── WhatsApp: apenas dígitos + prefixo 55 ────────────────────────────────\nconst digits = (payload.whatsapp || '').replace(/\\D/g, '');\nconst phone  = digits.startsWith('55') ? digits : '55' + digits;\n\n// ── Número da sorte — Draw Engine v2 com fallback legado ─────────────────\n// Prioridade 1: display_number (Draw Engine v2, int 0-99999)\n// Prioridade 2: lucky_number  (legado sequencial)\n// Erro: nenhum disponível\nlet luckyFormatted;\nlet numberSource;\n\nif (payload.display_number != null && payload.display_number !== '') {\n  const num = parseInt(payload.display_number);\n  luckyFormatted = 'PP-' + String(num).padStart(5, '0');\n  numberSource = 'draw_engine_v2';\n} else if (payload.lucky_number != null && payload.lucky_number !== '') {\n  const num = parseInt(payload.lucky_number);\n  luckyFormatted = 'PP-' + String(num).padStart(5, '0');\n  numberSource = 'legacy_sequential';\n} else {\n  throw new Error('Número da sorte ausente no payload. Verifique se o Draw Engine está configurado para a campanha.');\n}\n\n// ── Dados do participante e campanha ─────────────────────────────────────\nconst participantName = payload.participant_name || payload.name || 'Participante';\nconst campaignTitle   = payload.campaign_title   || payload.campaign_slug || 'Parceria Premiada';\nconst campaignSlug    = payload.campaign_slug    || '';\nconst regulationUrl   = 'https://parceriapremiada.app.br/regulamento.html' +\n  (campaignSlug ? '?campaign=' + campaignSlug : '');\n\n// ── Mensagem WhatsApp ────────────────────────────────────────────────────\nconst message = `🎉 Olá, ${participantName}!\\n\\nSeu cadastro no sorteio da Parceria Premiada foi realizado com sucesso.\\n\\n🎁 Campanha:\\n${campaignTitle}\\n\\n🎟️ Seu número da sorte oficial:\\n${luckyFormatted}\\n\\nAgora falta validar sua participação no Instagram:\\n\\n✅ Siga @parceriapremiada\\n✅ Siga os parceiros oficiais\\n✅ Curta a publicação oficial do sorteio\\n✅ Marque 3 amigos reais nos comentários\\n\\n⚠️ Não vale perfil fake, famoso ou comercial.\\n\\n🔎 Transparência:\\nSeu número foi gerado pelo Draw Engine da Parceria Premiada, com algoritmo auditável e verificável.\\n\\n📌 Regulamento:\\n${regulationUrl}\\n\\nBoa sorte! 🍀`;\n\nreturn [{\n  json: {\n    queue_id:         event.queue_id,\n    participant_id:   payload.participant_id,\n    campaign_id:      payload.campaign_id,\n    campaign_slug:    campaignSlug,\n    phone,\n    lucky_formatted:  luckyFormatted,\n    number_source:    numberSource,\n    display_hash:     payload.display_hash || null,\n    participant_name: participantName,\n    message,\n  }\n}];"
+      }
+    },
+    {
+      "id": "node-08-check-sent",
+      "name": "🔎 Verificar Idempotência",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1540, 220],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/rpc/check_whatsapp_sent",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey",        "value": "={{ $env.SUPABASE_ANON_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_ANON_KEY }}" },
+            { "name": "Content-Type",  "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "string",
+        "body": "={{ JSON.stringify({ p_participant_id: $json.participant_id, p_campaign_id: $json.campaign_id, p_type: 'participant.created' }) }}",
+        "options": {}
+      },
+      "continueOnFail": false
+    },
+    {
+      "id": "node-09-if-sent",
+      "name": "❓ Já Foi Enviado?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1760, 220],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "cond-02",
+              "leftValue": "={{ $json.already_sent }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "true" }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "node-10-evolution",
+      "name": "📱 Enviar WhatsApp (Evolution API)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1980, 140],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.EVOLUTION_API_URL }}/message/sendText/{{ $env.EVOLUTION_INSTANCE_NAME }}",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey",       "value": "={{ $env.EVOLUTION_API_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "string",
+        "body": "={{ JSON.stringify({ number: $('Normalizar Dados e Montar Mensagem').first().json.phone, text: $('Normalizar Dados e Montar Mensagem').first().json.message }) }}",
+        "options": {}
+      },
+      "continueOnFail": false
+    },
+    {
+      "id": "node-11-log-success",
+      "name": "📋 Registrar Log (Sucesso)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [2200, 140],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/rpc/log_whatsapp_message",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey",        "value": "={{ $env.SUPABASE_ANON_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_ANON_KEY }}" },
+            { "name": "Content-Type",  "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "string",
+        "body": "={{ JSON.stringify({ p_participant_id: $('Normalizar Dados e Montar Mensagem').first().json.participant_id, p_campaign_id: $('Normalizar Dados e Montar Mensagem').first().json.campaign_id, p_phone: $('Normalizar Dados e Montar Mensagem').first().json.phone, p_message: $('Normalizar Dados e Montar Mensagem').first().json.message, p_status: 'sent', p_type: 'participant.created', p_evolution_msg_id: $json.key?.id ?? null }) }}",
+        "options": {}
+      },
+      "continueOnFail": true
+    },
+    {
+      "id": "node-12-mark-done",
+      "name": "✅ Marcar como Done",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [2420, 220],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.ADMIN_API_BASE_URL }}/api/automation/update",
+        "authentication": "none",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "string",
+        "body": "={{ JSON.stringify({ queue_id: $('Loop por Evento').first().json.queue_id, status: 'done' }) }}",
+        "options": {}
+      },
+      "continueOnFail": true
+    },
+    {
+      "id": "node-13-log-failed",
+      "name": "📋 Registrar Log (Falha)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [2000, 460],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/rpc/log_whatsapp_message",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey",        "value": "={{ $env.SUPABASE_ANON_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_ANON_KEY }}" },
+            { "name": "Content-Type",  "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "string",
+        "body": "={{ JSON.stringify({ p_participant_id: $('Normalizar Dados e Montar Mensagem').first().json.participant_id, p_campaign_id: $('Normalizar Dados e Montar Mensagem').first().json.campaign_id, p_phone: $('Normalizar Dados e Montar Mensagem').first().json.phone, p_message: $('Normalizar Dados e Montar Mensagem').first().json.message, p_status: 'failed', p_type: 'participant.created', p_evolution_msg_id: null }) }}",
+        "options": {}
+      },
+      "continueOnFail": true
+    },
+    {
+      "id": "node-14-mark-failed",
+      "name": "❌ Marcar como Failed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [2220, 460],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.ADMIN_API_BASE_URL }}/api/automation/update",
+        "authentication": "none",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "string",
+        "body": "={{ JSON.stringify({ queue_id: $('Loop por Evento').first().json.queue_id, status: 'failed', error: $json.error?.message ?? $json.message ?? 'Erro desconhecido no workflow' }) }}",
+        "options": {}
+      },
+      "continueOnFail": true
+    }
+  ],
+  "connections": {
+    "⏱ Cron 1 Minuto": {
+      "main": [[{ "node": "📥 Buscar Eventos Pendentes", "type": "main", "index": 0 }]]
+    },
+    "📥 Buscar Eventos Pendentes": {
+      "main": [[{ "node": "🔍 Há Eventos Pendentes?", "type": "main", "index": 0 }]]
+    },
+    "🔍 Há Eventos Pendentes?": {
+      "main": [
+        [{ "node": "📦 Extrair Eventos", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "📦 Extrair Eventos": {
+      "main": [[{ "node": "🔄 Loop por Evento", "type": "main", "index": 0 }]]
+    },
+    "🔄 Loop por Evento": {
+      "main": [
+        [{ "node": "⚙️ Marcar como Processing", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "⚙️ Marcar como Processing": {
+      "main": [[{ "node": "🛠️ Normalizar Dados e Montar Mensagem", "type": "main", "index": 0 }]]
+    },
+    "🛠️ Normalizar Dados e Montar Mensagem": {
+      "main": [[{ "node": "🔎 Verificar Idempotência", "type": "main", "index": 0 }]]
+    },
+    "🔎 Verificar Idempotência": {
+      "main": [[{ "node": "❓ Já Foi Enviado?", "type": "main", "index": 0 }]]
+    },
+    "❓ Já Foi Enviado?": {
+      "main": [
+        [{ "node": "✅ Marcar como Done", "type": "main", "index": 0 }],
+        [{ "node": "📱 Enviar WhatsApp (Evolution API)", "type": "main", "index": 0 }]
+      ]
+    },
+    "📱 Enviar WhatsApp (Evolution API)": {
+      "main": [[{ "node": "📋 Registrar Log (Sucesso)", "type": "main", "index": 0 }]],
+      "error": [[{ "node": "📋 Registrar Log (Falha)", "type": "main", "index": 0 }]]
+    },
+    "📋 Registrar Log (Sucesso)": {
+      "main": [[{ "node": "✅ Marcar como Done", "type": "main", "index": 0 }]]
+    },
+    "✅ Marcar como Done": {
+      "main": [[{ "node": "🔄 Loop por Evento", "type": "main", "index": 0 }]]
+    },
+    "📋 Registrar Log (Falha)": {
+      "main": [[{ "node": "❌ Marcar como Failed", "type": "main", "index": 0 }]]
+    },
+    "❌ Marcar como Failed": {
+      "main": [[{ "node": "🔄 Loop por Evento", "type": "main", "index": 0 }]]
+    }
+  },
+  "pinData": {},
+  "staticData": null
+}
