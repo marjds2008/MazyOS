@@ -1,9 +1,9 @@
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 WORKDIR /app
 
 # Cache de dependências separado do código
 COPY package*.json ./
-RUN npm ci
+RUN npm install
 
 # Build — NEXT_PUBLIC_* são baked no bundle em compile time
 COPY . .
@@ -14,7 +14,7 @@ ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
 RUN npm run build
 
 # ── Runner (imagem final enxuta) ──────────────────────────────
-FROM node:20-alpine AS runner
+FROM node:22-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
