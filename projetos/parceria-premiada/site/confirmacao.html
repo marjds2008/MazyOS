@@ -161,9 +161,12 @@
 
   // ── Preencher número provisório da URL (atualizado após fetch Supabase) ───
   const dadosLocal   = JSON.parse(localStorage.getItem('pp_ultimo') || '{}');
-  const numeroUrl    = numberParam
-    ? luckyNumberService.format(numberParam)
-    : (dadosLocal.numero || 'PP-000001');
+  // Preferir display_number_fmt (Draw Engine v2), fallback para number param ou localStorage
+  const numeroUrl    = dadosLocal.display_number_fmt
+    ? 'PP-' + dadosLocal.display_number_fmt
+    : (numberParam
+        ? luckyNumberService.format(numberParam)
+        : (dadosLocal.numero || 'PP-00000'));
 
   document.getElementById('numero-display').textContent = numeroUrl;
 
@@ -190,7 +193,8 @@
       if (!dados) return; // se falhar, mantém dados do localStorage
 
       const primeiroNome = dados.name ? dados.name.split(' ')[0] : '';
-      const numeroFormatado = luckyNumberService.format(dados.lucky_number);
+      // Preferir display_number do Draw Engine v2; fallback para lucky_number antigo
+      const numeroFormatado = luckyNumberService.formatConfirmation(dados);
 
       // Atualizar nome
       if (primeiroNome) {

@@ -13,9 +13,23 @@ const luckyNumberService = {
    * @param {number|string} num
    * @returns {string} ex: 'PP-000042'
    */
+  /**
+   * Formata número no padrão PP-XXXXX (5 dígitos — Draw Engine v2).
+   * Fallback: se for string já formatada, retorna como está.
+   * Aceita tanto display_number (5 dígitos) quanto lucky_number sequencial.
+   */
   format(num) {
     if (typeof num === 'string' && num.startsWith('PP-')) return num;
-    return 'PP-' + String(num).padStart(6, '0');
+    // display_number_fmt já vem com 5 dígitos; lucky_number sequencial usa 5 também
+    return 'PP-' + String(num).padStart(5, '0');
+  },
+
+  /** Formata a partir do display_number_fmt quando disponível, com fallback para lucky_number */
+  formatConfirmation(data) {
+    if (data && data.display_number_fmt) return 'PP-' + data.display_number_fmt;
+    if (data && data.display_number != null) return 'PP-' + String(data.display_number).padStart(5, '0');
+    if (data && data.lucky_number != null)   return luckyNumberService.format(data.lucky_number);
+    return 'PP-00000';
   },
 
   /**

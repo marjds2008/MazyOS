@@ -3,8 +3,27 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title id="page-title">Sorteio — Parceria Premiada</title>
-<meta id="page-desc" name="description" content="Sorteio gratuito da Parceria Premiada.">
+<title id="page-title">Parceria Premiada — Sorteio Viagem para Minas Gerais</title>
+<meta id="page-desc" name="description" content="Participe gratuitamente do sorteio de lançamento da Parceria Premiada e concorra a uma viagem para Santa Rita de Jacutinga – MG com a Amo Viajar.">
+
+<!-- Favicon -->
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="apple-touch-icon" href="logo.png">
+
+<!-- OpenGraph -->
+<meta property="og:title"       content="Parceria Premiada — Sorteio Viagem para Minas Gerais">
+<meta property="og:description" content="Participe gratuitamente do sorteio de lançamento da Parceria Premiada e concorra a uma viagem para Santa Rita de Jacutinga – MG com a Amo Viajar.">
+<meta property="og:image"       content="https://parceriapremiada.app.br/logo.png">
+<meta property="og:url"         content="https://parceriapremiada.app.br">
+<meta property="og:type"        content="website">
+<meta property="og:locale"      content="pt_BR">
+<meta property="og:site_name"   content="Parceria Premiada">
+
+<!-- Twitter Card -->
+<meta name="twitter:card"        content="summary_large_image">
+<meta name="twitter:title"       content="Parceria Premiada — Sorteio Viagem para Minas Gerais">
+<meta name="twitter:description" content="Participe gratuitamente do sorteio de lançamento da Parceria Premiada e concorra a uma viagem para Santa Rita de Jacutinga – MG com a Amo Viajar.">
+<meta name="twitter:image"       content="https://parceriapremiada.app.br/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -667,33 +686,36 @@ async function cadastrar() {
       });
 
       // Salva no localStorage como fallback para a página de confirmação
+      // Preferir display_number_fmt (Draw Engine v2); fallback para número sequencial
+      const displayFmt = result.display_fmt || result.display_number_fmt || null;
       localStorage.setItem('pp_ultimo', JSON.stringify({
         nome,
-        numero:         luckyNumberService.format(result.number),
+        numero:              luckyNumberService.format(result.number),
+        display_number_fmt:  displayFmt,
+        display_hash:        result.display_hash || null,
+        sequence_number:     result.sequence_number || result.number,
         whatsapp,
-        campaign:       campaign.slug,
-        participant_id: result.participant_id
+        campaign:            campaign.slug,
+        participant_id:      result.participant_id
       }));
+
+      // Número para a URL: preferir display_number, fallback para sequencial
+      const numeroUrl = result.display_number != null ? result.display_number : result.number;
 
       setTimeout(() => {
         window.location.href =
           `confirmacao.html?campaign=${encodeURIComponent(campaign.slug)}` +
           `&participant_id=${encodeURIComponent(result.participant_id)}` +
-          `&number=${result.number}`;
+          `&number=${numeroUrl}`;
       }, 800);
 
     } else {
-      // ── Fallback localStorage (Supabase não configurado) ─────────────────
-      const numero = gerarNumero(campaign.slug);
-      const key    = 'pp_cadastros_' + campaign.slug;
-      const cadastros = JSON.parse(localStorage.getItem(key) || '[]');
-      cadastros.push({ nome, whatsapp, instagram, cidade, estado, email, numero, data: new Date().toISOString() });
-      localStorage.setItem(key, JSON.stringify(cadastros));
-      localStorage.setItem('pp_ultimo', JSON.stringify({ nome, numero, whatsapp, campaign: campaign.slug }));
-
-      setTimeout(() => {
-        window.location.href = `confirmacao.html?campaign=${encodeURIComponent(campaign.slug)}&number=${encodeURIComponent(numero)}`;
-      }, 800);
+      // ── Supabase não configurado — bloquear em produção ──────────────────
+      // Não gerar número falso. Exibir erro claro ao usuário.
+      btn.textContent = 'Garantir meu número da sorte 🎉';
+      btn.disabled    = false;
+      mostrarErro('Sistema temporariamente indisponível. Tente novamente em instantes.');
+      console.error('[PP] Supabase não configurado. Verifique js/config.js.');
     }
 
   } catch (err) {

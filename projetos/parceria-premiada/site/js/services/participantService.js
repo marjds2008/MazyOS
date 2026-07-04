@@ -48,6 +48,11 @@ const participantService = {
       throw err;
     }
 
+    // Normalizar: garantir que display_number_fmt está presente para o frontend
+    if (data && data.display_fmt && !data.display_number_fmt) {
+      data.display_number_fmt = data.display_fmt;
+    }
+
     return data;
   },
 
