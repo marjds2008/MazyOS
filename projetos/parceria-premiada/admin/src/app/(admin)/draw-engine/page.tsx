@@ -204,7 +204,7 @@ export default function DrawEnginePage() {
           <Hash className="w-4 h-4 text-brand-primary mt-0.5 shrink-0" />
           <div className="space-y-1">
             <p className="text-sm font-semibold text-white">
-              {DrawEngine.SeedManager.deriveKey ? "" : ""}Feistel Network (8 rodadas) + HMAC-SHA256
+              Feistel Network (8 rodadas) + HMAC-SHA256
             </p>
             <p className="text-xs text-gray-400 leading-relaxed">
               Algoritmo <strong className="text-gray-300">v{DrawEngine.algorithmVersion}</strong> · Engine <strong className="text-gray-300">v{DrawEngine.version}</strong> ·
