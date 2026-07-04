@@ -2,6 +2,8 @@
 // Rota: admin.parceriapremiada.app.br/transparencia
 // Não requer autenticação
 
+export const dynamic = "force-dynamic";
+
 import { Shield, Hash, CheckCircle2, Lock, BarChart2, Search } from "lucide-react";
 import { TransparencyService, ALGORITHM_VERSION, DRAW_ENGINE_VERSION, DOMAIN } from "@/lib/draw-engine";
 import { VerifyWidget } from "./VerifyWidget";
