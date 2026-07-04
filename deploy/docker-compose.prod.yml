@@ -27,13 +27,13 @@ services:
         - traefik.http.services.parceria-site.loadbalancer.server.port=8080
 
   # ──────────────────────────────────────────────────────────────
-  # SERVIÇO 2 — Admin BackOffice
+  # SERVIÇO 2 — PP Admin (app Next.js isolado)
   # admin.parceriapremiada.app.br
   # ──────────────────────────────────────────────────────────────
   parceria_admin:
     image: parceria_admin:prod
     build:
-      context: ../admin
+      context: ../projetos/parceria-premiada/admin
       dockerfile: Dockerfile
       args:
         NEXT_PUBLIC_SUPABASE_URL: ${SUPABASE_URL}
@@ -42,13 +42,17 @@ services:
       - starlink
     environment:
       - NODE_ENV=production
-      - N8N_WEBHOOK_URL=${N8N_WEBHOOK_URL}
-      - N8N_DELAY_SEGUNDOS=${N8N_DELAY_SEGUNDOS:-3}
-      - N8N_LIMITE_POR_EXECUCAO=${N8N_LIMITE_POR_EXECUCAO:-50}
+      - ADMIN_API_BASE_URL=${ADMIN_API_BASE_URL:-https://admin.parceriapremiada.app.br}
+      - PUBLIC_SITE_URL=${PUBLIC_SITE_URL:-https://parceriapremiada.app.br}
     deploy:
       replicas: 1
       restart_policy:
         condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      update_config:
+        order: start-first
+        failure_action: rollback
       labels:
         - traefik.enable=true
         - traefik.docker.network=starlink
@@ -57,6 +61,8 @@ services:
         - traefik.http.routers.parceria-admin.tls=true
         - traefik.http.routers.parceria-admin.tls.certresolver=letsencryptresolver
         - traefik.http.services.parceria-admin.loadbalancer.server.port=3000
+        - traefik.http.services.parceria-admin.loadbalancer.healthcheck.path=/login
+        - traefik.http.services.parceria-admin.loadbalancer.healthcheck.interval=30s
 
 networks:
   starlink:
