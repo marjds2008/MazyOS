@@ -19,6 +19,8 @@ Detalhamento completo do roadmap (etapas 1–9, o que está pronto e o que vem):
 
 **Outros projetos ativos:**
 - **Dose Dupla Hub** (`projetos/dose-dupla-hub/`) — site/hub para o Restaurante Sabores do Fellini, deployed no Cloudflare Pages
+- **Lista VIP** (`projetos/lista-vip/`) — landing de captura de leads em amoviajar.app.br/lista-vip/, integrada ao Supabase
+- **Parceria Premiada** (`projetos/parceria-premiada/`) — plataforma de sorteios e marketing local. Admin Next.js 16 deployado em admin.parceriapremiada.app.br (Docker Swarm + Traefik). Landing em parceriapremiada.app.br. Draw Engine v2.0 (Feistel + HMAC-SHA256) para geração criptográfica de números da sorte.
 
 **Status atual (junho/2026):**
 - Etapa 1 (Site) ✅ concluída

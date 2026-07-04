@@ -20,20 +20,24 @@ Melhorias estéticas e ajustes menores que não impactam a funcionalidade core.
 
 Gastar tempo decidindo o que e como implementar sem ter definição prévia clara. Cada semana recomeça com a mesma dúvida sobre o que construir. Candidato a virar skill via `/mapear-rotinas`: **definição de escopo antes de implementar**.
 
-## Conquistas recentes (junho/2026)
+## Conquistas recentes (junho–julho/2026)
 
 - Landing page `/lista-vip` no ar em amoviajar.app.br/lista-vip/
 - Meta Pixel instalado globalmente (ID 1526440209138815) — PageView + Lead ativos e validados
 - Formulário de captura de leads funcionando (Supabase `lista_vip`)
-- Parceria Premiada Sprint 1+2+3 concluídas: landing dinâmica por campanha + Supabase integrado
-- Supabase self-hosted rodando em 86.48.5.174 (supabase.mundodosbots.app.br), banco pp criado e validado
-- Parceria Premiada Sprint 4 concluída: painel admin read-only (admin.html) com dashboard, tabela de participantes, busca, badges de status, botões de ação e exportação CSV
-- Parceria Premiada Sprint 5 concluída: motor de regras e gamificação — tabelas campaign_tasks, participant_actions, notifications, reward_rules; RPC get_participant_progress; trigger auto-REGISTRATION; modal de progresso no admin com barra e lista de tarefas por participante
+- **PP Admin isolado** (Next.js 16) deployado com HTTPS em admin.parceriapremiada.app.br — Docker Swarm + Traefik, separado do AV admin
+- **Domínio parceriapremiada.app.br** no ar com SSL Let's Encrypt
+- **Migração 010 aplicada** — 6 tabelas PP + 9 RPCs no Supabase self-hosted
+- **Draw Engine v2.0 implementado** — Feistel não-balanceada (8 rodadas, HMAC-SHA256), zero colisões garantidas matematicamente, sub-1ms por número, migração 011 criada aguardando aplicação
 
 ## Próximo foco
 
-Rodar anúncios Meta Ads para a Lista VIP — campanha de captura de leads com otimização para o evento `Lead`.
+Finalizar o Parceria Premiada para o sorteio de 17 de julho:
+1. Aplicar migração 011 (Draw Engine) no Supabase da VPS
+2. Integrar Draw Engine no fluxo de registro de participante
+3. Criar fluxos WhatsApp no n8n (consumidor e parceiro)
+4. Subir criativos Meta Ads para divulgação da campanha
 
 ## Contexto com prazo
 
-Sem prazo fixo definido no momento do setup (junho/2026).
+**17 de julho de 2026** — data do sorteio Parceria Premiada (viagem para Minas). Prioridade máxima até lá.
