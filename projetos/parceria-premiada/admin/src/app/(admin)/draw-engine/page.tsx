@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { DrawEngine } from "@/lib/draw-engine";
+import { ALGORITHM_VERSION, DRAW_ENGINE_VERSION } from "@/lib/draw-engine/types";
+import { serverGenerateSeed, serverVerifyNumber } from "./actions";
 import {
   KeyRound, Shield, Hash, CheckCircle2, XCircle, RefreshCw,
   Copy, Check, Search, ChevronRight,
@@ -38,11 +39,11 @@ function VerifyForm({ seed }: { seed: string }) {
   const [num, setNum]     = useState("");
   const [result, setResult] = useState<{ valid: boolean; expected: number } | null>(null);
 
-  function verify() {
+  async function verify() {
     const sequence = parseInt(seq);
     const provided = parseInt(num);
     if (!sequence || isNaN(provided)) return;
-    const r = DrawEngine.verify(seed, sequence, provided);
+    const r = await serverVerifyNumber(seed, sequence, provided);
     setResult({ valid: r.valid, expected: r.expected });
   }
 
@@ -153,7 +154,7 @@ export default function DrawEnginePage() {
 
   async function generateSeed(campanhaId: string) {
     setGeneratingSeed(true);
-    const seedData = DrawEngine.SeedManager.createCampaignSeed();
+    const seedData = await serverGenerateSeed();
 
     const { error } = await supabase
       .from("pp_campanhas")
@@ -207,7 +208,7 @@ export default function DrawEnginePage() {
               Feistel Network (8 rodadas) + HMAC-SHA256
             </p>
             <p className="text-xs text-gray-400 leading-relaxed">
-              Algoritmo <strong className="text-gray-300">v{DrawEngine.algorithmVersion}</strong> · Engine <strong className="text-gray-300">v{DrawEngine.version}</strong> ·
+              Algoritmo <strong className="text-gray-300">v{ALGORITHM_VERSION}</strong> · Engine <strong className="text-gray-300">v{DRAW_ENGINE_VERSION}</strong> ·
               Domínio <strong className="text-gray-300">00000–99999</strong> ·
               Zero colisões garantidas matematicamente · Sub-1ms por número
             </p>
