@@ -26,7 +26,7 @@ RUN addgroup --system --gid 1001 nodejs && \
 
 # Deps de produção apenas
 COPY --from=builder /app/package*.json ./
-RUN npm ci --omit=dev
+RUN npm install --omit=dev
 
 # Artefatos do build
 COPY --from=builder --chown=nextjs:nodejs /app/.next        ./.next
