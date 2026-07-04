@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useAdminUser, type AdminRole } from "@/contexts/AdminUserContext";
 import {
   BarChart2, Target, UserCheck, Store, Zap, MessageCircle, Cog,
-  LogOut, Menu, X, Sun, Moon, ChevronsRight, Trophy,
+  LogOut, Menu, X, Sun, Moon, ChevronsRight, Trophy, KeyRound,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -19,6 +19,7 @@ const NAV: NavItem[] = [
   { href: "/parceiros",     label: "Parceiros",     icon: Store,         roles: ["admin", "parceiro"] },
   { href: "/automacoes",    label: "Automações",    icon: Zap,           roles: ["admin", "operador"] },
   { href: "/whatsapp-logs", label: "WhatsApp Logs", icon: MessageCircle, roles: ["admin", "operador"] },
+  { href: "/draw-engine",   label: "Draw Engine",   icon: KeyRound,      roles: ["admin"] },
   { href: "/configuracoes", label: "Configurações", icon: Cog,           roles: ["admin"] },
 ];
 

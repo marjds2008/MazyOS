@@ -7,7 +7,11 @@ const ROUTE_ROLES: Record<string, AdminRole[]> = {
   "/configuracoes": ["admin"],
   "/parceiros":     ["admin", "parceiro"],
   "/campanhas":     ["admin", "parceiro"],
+  "/draw-engine":   ["admin"],
 };
+
+// Routes accessible without authentication
+const PUBLIC_PATHS = ["/login", "/transparencia"];
 
 export default async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -34,11 +38,13 @@ export default async function proxy(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser();
 
+  const isPublic = PUBLIC_PATHS.some(p => pathname === p || pathname.startsWith(p + "/"));
+
   if (!user) {
+    if (isPublic) return supabaseResponse;
     if (isApiRoute) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    if (pathname === "/login") return supabaseResponse;
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
