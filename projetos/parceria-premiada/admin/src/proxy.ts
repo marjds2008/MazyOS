@@ -63,7 +63,7 @@ export default async function proxy(request: NextRequest) {
 
   if (requiredRoles) {
     const { data: profile } = await supabase.rpc("get_my_admin_profile");
-    const role: AdminRole = profile?.role ?? "operador";
+    const role: AdminRole = (Array.isArray(profile) ? profile[0]?.role : profile?.role) ?? "operador";
     if (!requiredRoles.includes(role)) {
       if (isApiRoute) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
       const url = request.nextUrl.clone();

@@ -9,11 +9,24 @@ function LoginForm() {
   const router       = useRouter();
   const searchParams = useSearchParams();
   const expired      = searchParams.get("expired") === "true";
+  const erroParam    = searchParams.get("erro");
+
+  const ERRO_MSG: Record<string, string> = {
+    "nao-autorizado":    "Usuário sem permissão de acesso ao painel.",
+    "usuario-desativado": "Conta desativada. Entre em contato com o administrador.",
+    "sem-permissao":     "Sem permissão para acessar esta página.",
+  };
+
+  const initialError = expired
+    ? "Sessão expirada por inatividade."
+    : erroParam
+    ? (ERRO_MSG[erroParam] ?? "Acesso negado.")
+    : null;
 
   const [email,    setEmail]    = useState("");
   const [password, setPassword] = useState("");
   const [loading,  setLoading]  = useState(false);
-  const [error,    setError]    = useState<string | null>(expired ? "Sessão expirada por inatividade." : null);
+  const [error,    setError]    = useState<string | null>(initialError);
 
   useEffect(() => {
     const supabase = createClient();
