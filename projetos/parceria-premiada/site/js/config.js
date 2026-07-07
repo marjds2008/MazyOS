@@ -10,5 +10,5 @@
  * do banco controlam o que cada chamada pode acessar.
  */
 
-const SUPABASE_URL      = 'https://supabase.mundodosbots.app.br';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ewogICJyb2xlIjogImFub24iLAogICJpc3MiOiAic3VwYWJhc2UiLAogICJpYXQiOiAxNzE1MDUwODAwLAogICJleHAiOiAxODcyODE3MjAwCn0.DJCl1WlIBIcZ2aTGCWr2jUbeF21uk_ivnQDZ-mXKtqE';
+const SUPABASE_URL      = 'https://vuhawrfkzutcuqnleykd.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ1aGF3cmZrenV0Y3VxbmxleWtkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyMjY1ODMsImV4cCI6MjA4OTgwMjU4M30.pd2IYWUCyy_C_8AT3IvCG6tvtocKAisP1w_gvDnH1mI';
