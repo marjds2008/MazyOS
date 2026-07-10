@@ -84,19 +84,19 @@ const PP_CAMPAIGNS = [
       },
       {
         name: 'Dose Dupla Bar',
-        instagram: '@dosedupla',
-        instagramUrl: 'https://instagram.com/dosedupla',
+        instagram: '@restaurantedosedupla',
+        instagramUrl: 'https://www.instagram.com/restaurantedosedupla/',
         category: 'Bar & Gastronomia',
-        logo: null,
-        emoji: '🍺'
+        logo: 'logo_dose_dupla.jfif',
+        emoji: null
       },
       {
         name: 'Sabores do Fellini',
-        instagram: '@saboresfellini',
-        instagramUrl: 'https://instagram.com/saboresfellini',
+        instagram: '@saboresdofellini',
+        instagramUrl: 'https://www.instagram.com/saboresdofellini/',
         category: 'Restaurante',
-        logo: null,
-        emoji: '🍽️'
+        logo: 'logo_sf.jpeg',
+        emoji: null
       }
     ],
 
