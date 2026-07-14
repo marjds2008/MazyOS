@@ -18,6 +18,15 @@ const STATUS_BADGE: Record<string, string> = {
   pausada:   "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400",
   encerrada: "bg-gray-100 text-gray-600 dark:bg-gray-500/10 dark:text-gray-400",
   rascunho:  "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400",
+  cancelada: "bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400",
+};
+
+const STATUS_LABEL: Record<string, string> = {
+  ativa:     "Ativa",
+  pausada:   "Pausada",
+  encerrada: "Encerrada",
+  rascunho:  "Rascunho",
+  cancelada: "Cancelada",
 };
 
 export default function CampanhasPage() {
@@ -87,7 +96,7 @@ export default function CampanhasPage() {
               </div>
               <div className="flex items-center gap-3 shrink-0">
                 <span className={`text-xs font-medium px-2 py-1 rounded-full ${STATUS_BADGE[c.status] ?? STATUS_BADGE.rascunho}`}>
-                  {c.status}
+                  {STATUS_LABEL[c.status] ?? c.status}
                 </span>
                 <button className="btn-secondary text-xs px-3 py-1.5">
                   <Send className="w-3.5 h-3.5" /> Enviar
