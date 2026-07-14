@@ -256,11 +256,14 @@ ALTER TABLE campaign_tasks
   ADD COLUMN IF NOT EXISTS verification_type TEXT NOT NULL DEFAULT 'manual'
   CHECK (verification_type IN ('manual','automatic'));
 
--- Migrar 'completed' → 'self_declared' ANTES de recriar o CHECK
-UPDATE participant_actions SET status = 'self_declared' WHERE status = 'completed';
-
+-- DROP primeiro (libera o constraint antigo)
 ALTER TABLE participant_actions
   DROP CONSTRAINT IF EXISTS participant_actions_status_check;
+
+-- UPDATE sem constraint ativo (pode setar self_declared livremente)
+UPDATE participant_actions SET status = 'self_declared' WHERE status = 'completed';
+
+-- ADD com todas as linhas já válidas
 ALTER TABLE participant_actions
   ADD CONSTRAINT participant_actions_status_check
   CHECK (status IN ('pending','self_declared','verified','rejected'));
